@@ -441,9 +441,51 @@
         <h2 style="margin:0 0 8px">快速編輯（貼上多題）</h2>
         <p class="note">把題目貼在下面，我會嘗試解析成 JSON（格式：每題一行：題目｜A｜B｜C｜D｜正確(1-4)）。</p>
         <textarea id="quickPaste" placeholder="例：\n( ) EXIT 是什麼？｜入口｜出口｜廁所｜停車場｜2"></textarea>
+        
+        <div class="hr"></div>
+        <h2 style="margin:0 0 8px">🛠️ 題庫編輯器（可修改既有題目）</h2>
+        <p class="note">可直接改題幹、選項、正確答案、分類與解析。改完請按「💾 儲存題庫」。</p>
+
+        <div class="row">
+          <div class="field">
+            <label>搜尋（題幹 / 選項 / 分類）</label>
+            <input id="qSearch" placeholder="例如：EXIT / restroom / 星期…">
+          </div>
+          <div class="field">
+            <label>分類篩選</label>
+            <select id="qCatFilter"></select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>每頁顯示</label>
+            <select id="qPageSize">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>頁面</label>
+            <div class="actions" style="margin-top:0">
+              <button class="btn tiny" id="qPrev" type="button"><span class="left"><span class="badge">◀</span>上一頁</span><small></small></button>
+              <button class="btn tiny" id="qNext" type="button"><span class="left"><span class="badge">▶</span>下一頁</span><small></small></button>
+            </div>
+            <div class="note" id="qPageInfo" style="margin-top:6px"></div>
+          </div>
+        </div>
+
+        <div class="list" id="bankEditor"></div>
+
         <div class="actions">
-          <button class="btn ok" id="quickToJson" type="button"><span class="left"><span class="badge">✨</span>解析成題庫（追加）</span><small></small></button>
-          <button class="btn" id="backHome4" type="button"><span class="left"><span class="badge">↩</span>回首頁</span><small></small></button>
+          <button class="btn ok" id="addQuestion" type="button"><span class="left"><span class="badge">➕</span>新增題目</span><small></small></button>
+          <button class="btn primary" id="saveBankEdits" type="button"><span class="left"><span class="badge">💾</span>儲存題庫</span><small>套用修改</small></button>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="backHome4b" type="button"><span class="left"><span class="badge">↩</span>回首頁</span><small></small></button>
         </div>
       </div>
     </section>
@@ -518,7 +560,7 @@
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "english_quiz_pwa_v3";
+  const STORAGE_KEY = "english_quiz_pwa_v4";
   const $ = (id) => document.getElementById(id);
 
   const uid = (p="id") => `${p}_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
@@ -586,6 +628,8 @@
     refreshBankInfo();
     renderStudentsEditor();
     renderReports();
+    renderBankEditor();
+    wireBankEditorEvents();
     bindUI();
 
     // PWA SW
@@ -615,7 +659,7 @@
     if(el) el.classList.add("active");
     app.ui.view = viewId;
     if(viewId==="viewReports") renderReports();
-    if(viewId==="viewBank") refreshBankInfo();
+    if(viewId==="viewBank") { refreshBankInfo(); renderBankEditor(); }
     if(viewId==="viewStudents") { renderStudentsEditor(); hydrateSelects(); }
   }
 
@@ -809,6 +853,7 @@
       refreshBankInfo();
       renderReports();
       alert(`✅ 已匯入題庫（覆蓋）：${qs.length} 題`);
+      renderBankEditor();
     }).catch(e=>alert("匯入失敗：" + e.message));
   }
 
@@ -820,6 +865,7 @@
       hydrateSelects();
       refreshBankInfo();
       alert(`✅ 已追加題庫：+${qs.length} 題（目前共 ${app.data.questions.length} 題）`);
+      renderBankEditor();
     }).catch(e=>alert("匯入失敗：" + e.message));
   }
 
@@ -844,6 +890,7 @@
     hydrateSelects();
     refreshBankInfo();
     alert(`✅ 已追加 ${out.length} 題！`);
+    renderBankEditor();
     $("quickPaste").value="";
   }
 
@@ -1252,6 +1299,272 @@
     }
   }
 
+  
+  // ===== Bank editor =====
+  app.ui.bank ||= { page: 1, pageSize: 10, search: "", cat: "" };
+
+  function bankCategories(){
+    return Array.from(new Set(app.data.questions.map(q=> (q.category||"").trim()).filter(Boolean)))
+      .sort((a,b)=>a.localeCompare(b,"zh-Hant"));
+  }
+
+  function getFilteredQuestions(){
+    const s = (app.ui.bank.search||"").trim().toLowerCase();
+    const cat = (app.ui.bank.cat||"").trim();
+    let list = app.data.questions.slice();
+    if(cat) list = list.filter(q=> (q.category||"").trim()===cat);
+    if(s){
+      list = list.filter(q=>{
+        const hay = [
+          q.prompt||"",
+          (q.category||""),
+          (q.explain||""),
+          ...(q.options||[])
+        ].join(" ").toLowerCase();
+        return hay.includes(s);
+      });
+    }
+    return list;
+  }
+
+  function ensureQuestionShape(q){
+    q.id ||= uid("q");
+    q.prompt = String(q.prompt||"").trim();
+    q.options = Array.isArray(q.options) ? q.options.map(x=>String(x)) : ["","","",""];
+    if(q.options.length<2) q.options = ["","","",""];
+    q.answer = Number.isFinite(Number(q.answer)) ? Number(q.answer) : 0;
+    q.answer = clamp(q.answer, 0, Math.max(0, q.options.length-1));
+    q.category = String(q.category||"").trim();
+    q.difficulty = Number(q.difficulty||1) || 1;
+    q.explain = String(q.explain||"");
+  }
+
+  function renderBankEditor(){
+    const editor = $("bankEditor");
+    if(!editor) return;
+
+    // build category filter options
+    const cats = bankCategories();
+    const catSel = $("qCatFilter");
+    if(catSel){
+      const cur = app.ui.bank.cat || "";
+      catSel.innerHTML = ['<option value="">（全部）</option>'].concat(cats.map(c=>`<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`)).join("");
+      catSel.value = cats.includes(cur) ? cur : "";
+      app.ui.bank.cat = catSel.value;
+    }
+
+    const pageSizeSel = $("qPageSize");
+    if(pageSizeSel){
+      const ps = Number(app.ui.bank.pageSize)||10;
+      pageSizeSel.value = String(ps);
+    }
+
+    const list = getFilteredQuestions().map(q=>{ ensureQuestionShape(q); return q; });
+    const pageSize = Number(app.ui.bank.pageSize)||10;
+    const pageCount = Math.max(1, Math.ceil(list.length / pageSize));
+    app.ui.bank.page = clamp(app.ui.bank.page||1, 1, pageCount);
+
+    const start = (app.ui.bank.page-1)*pageSize;
+    const pageItems = list.slice(start, start+pageSize);
+
+    const info = $("qPageInfo");
+    if(info){
+      info.textContent = `共 ${list.length} 題｜第 ${app.ui.bank.page} / ${pageCount} 頁`;
+    }
+
+    // render
+    const labels = ["(1)","(2)","(3)","(4)","(5)","(6)"];
+    editor.innerHTML = pageItems.map((q, idx)=>{
+      const num = start + idx + 1;
+      const optCount = q.options.length;
+      const answerOpts = q.options.map((_,i)=>`<option value="${i}">${labels[i]||String(i+1)}</option>`).join("");
+      const optInputs = q.options.map((opt,i)=>`
+        <div class="row" style="gap:8px">
+          <div style="width:46px;flex:0 0 auto">
+            <input value="${labels[i]||String(i+1)}" readonly style="text-align:center">
+          </div>
+          <div class="field" style="min-width:180px">
+            <input data-k="opt" data-idx="${i}" value="${escapeHTML(opt)}" placeholder="選項內容">
+          </div>
+        </div>
+      `).join("");
+
+      const preview = escapeHTML((q.prompt||"").slice(0,28)) + ((q.prompt||"").length>28 ? "…" : "");
+      const catTag = q.category ? `｜${escapeHTML(q.category)}` : "";
+      return `
+        <details class="item" data-qid="${escapeHTML(q.id)}" style="display:block">
+          <summary style="cursor:pointer;font-weight:1000;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span>${num}. ${preview}${catTag}</span>
+            <span class="meta">點我展開編輯</span>
+          </summary>
+
+          <div style="margin-top:10px">
+            <label>題目（題幹）</label>
+            <textarea data-k="prompt" placeholder="請輸入題幹…">${escapeHTML(q.prompt||"")}</textarea>
+
+            <div class="row">
+              <div class="field">
+                <label>分類</label>
+                <input data-k="category" value="${escapeHTML(q.category||"")}" placeholder="例如：公共標示 / 時間 / 生活對話…">
+              </div>
+              <div class="field">
+                <label>選項數</label>
+                <select data-k="optCount">
+                  ${[2,3,4,5,6].map(n=>`<option value="${n}" ${n===optCount?"selected":""}>${n}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+
+            <label>選項</label>
+            ${optInputs}
+
+            <div class="row">
+              <div class="field">
+                <label>正確答案</label>
+                <select data-k="answer">${answerOpts}</select>
+              </div>
+              <div class="field">
+                <label>難度（1=易）</label>
+                <select data-k="difficulty">
+                  ${[1,2,3].map(n=>`<option value="${n}" ${Number(q.difficulty||1)===n?"selected":""}>${n}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+
+            <label>解析（可留空）</label>
+            <textarea data-k="explain" placeholder="例如：EXIT = 出口">${escapeHTML(q.explain||"")}</textarea>
+
+            <div class="actions">
+              <button class="btn tiny danger" data-act="del" type="button"><span class="left"><span class="badge">🗑</span>刪除題目</span><small></small></button>
+            </div>
+          </div>
+        </details>
+      `;
+    }).join("");
+
+    // set default selections for answer dropdowns after render
+    editor.querySelectorAll('details[data-qid]').forEach(det=>{
+      const qid = det.dataset.qid;
+      const q = app.data.questions.find(x=>x.id===qid);
+      if(!q) return;
+      ensureQuestionShape(q);
+      const ansSel = det.querySelector('select[data-k="answer"]');
+      if(ansSel) ansSel.value = String(q.answer);
+    });
+
+    // enable/disable page buttons
+    $("qPrev").disabled = app.ui.bank.page<=1;
+    $("qNext").disabled = app.ui.bank.page>=pageCount;
+  }
+
+  function findQuestionById(qid){
+    return app.data.questions.find(q=>q.id===qid);
+  }
+
+  function applyOptionCount(q, n){
+    n = clamp(Number(n)||4, 2, 6);
+    ensureQuestionShape(q);
+    const cur = q.options.length;
+    if(n===cur) return;
+    if(n>cur){
+      while(q.options.length<n) q.options.push("");
+    }else{
+      q.options = q.options.slice(0,n);
+      q.answer = clamp(q.answer,0,n-1);
+    }
+  }
+
+  function addQuestion(){
+    const q = { id: uid("q"), prompt:"", options:["","","",""], answer:0, category:"", difficulty:1, explain:"" };
+    app.data.questions.push(q);
+    // jump to last page so user sees it
+    const total = getFilteredQuestions().length + 1;
+    const ps = Number(app.ui.bank.pageSize)||10;
+    app.ui.bank.page = Math.ceil(total/ps);
+    renderBankEditor();
+    refreshBankInfo();
+  }
+
+  function saveBankEdits(){
+    // sanitize
+    app.data.questions.forEach(q=>{
+      ensureQuestionShape(q);
+      // trim options
+      q.options = q.options.map(o=>String(o||"").trim());
+      q.prompt = String(q.prompt||"").trim();
+      q.category = String(q.category||"").trim();
+      q.explain = String(q.explain||"").trim();
+      q.answer = clamp(Number(q.answer)||0, 0, Math.max(0,q.options.length-1));
+    });
+    // remove empty prompts (optional safety)
+    // keep but warn if many empty
+    save();
+    hydrateSelects();
+    refreshBankInfo();
+    renderReports();
+    alert("✅ 題庫已儲存！");
+  }
+
+  function deleteQuestion(qid){
+    const idx = app.data.questions.findIndex(q=>q.id===qid);
+    if(idx<0) return;
+    if(confirm("確定要刪除這題嗎？")){
+      app.data.questions.splice(idx,1);
+      save();
+      refreshBankInfo();
+      hydrateSelects();
+      renderBankEditor();
+    }
+  }
+
+  function wireBankEditorEvents(){
+    const editor = $("bankEditor");
+    if(!editor) return;
+
+    // input delegation
+    editor.addEventListener("input", (e)=>{
+      const el = e.target;
+      const det = el.closest('details[data-qid]');
+      if(!det) return;
+      const qid = det.dataset.qid;
+      const q = findQuestionById(qid);
+      if(!q) return;
+      ensureQuestionShape(q);
+
+      const k = el.dataset.k;
+      if(!k) return;
+
+      if(k==="prompt"||k==="category"||k==="explain"){
+        q[k] = el.value;
+      }else if(k==="difficulty"){
+        q.difficulty = Number(el.value)||1;
+      }else if(k==="answer"){
+        q.answer = clamp(Number(el.value)||0,0, Math.max(0,q.options.length-1));
+      }else if(k==="opt"){
+        const idx = Number(el.dataset.idx);
+        if(Number.isFinite(idx) && idx>=0 && idx<q.options.length){
+          q.options[idx] = el.value;
+        }
+      }else if(k==="optCount"){
+        applyOptionCount(q, el.value);
+        // re-render to update option inputs & answer range
+        renderBankEditor();
+      }
+    });
+
+    editor.addEventListener("click",(e)=>{
+      const btn = e.target.closest("button[data-act]");
+      if(!btn) return;
+      const det = btn.closest('details[data-qid]');
+      if(!det) return;
+      const qid = det.dataset.qid;
+      if(btn.dataset.act==="del"){
+        deleteQuestion(qid);
+      }
+    });
+  }
+
+
   // ===== Bind UI =====
   function bindUI(){
     const go = (v)=>()=>show(v);
@@ -1324,6 +1637,34 @@
       e.target.value = "";
     });
     $("quickToJson").onclick = quickPasteToJson;
+
+    
+    // bank editor
+    $("addQuestion").onclick = addQuestion;
+    $("saveBankEdits").onclick = saveBankEdits;
+    $("backHome4b").onclick = go("viewHome");
+
+    $("qPrev").onclick = ()=>{ app.ui.bank.page = Math.max(1,(app.ui.bank.page||1)-1); renderBankEditor(); };
+    $("qNext").onclick = ()=>{ app.ui.bank.page = (app.ui.bank.page||1)+1; renderBankEditor(); };
+
+    $("qSearch").addEventListener("input", ()=>{
+      app.ui.bank.search = $("qSearch").value || "";
+      app.ui.bank.page = 1;
+      renderBankEditor();
+    });
+
+    $("qCatFilter").onchange = ()=>{
+      app.ui.bank.cat = $("qCatFilter").value || "";
+      app.ui.bank.page = 1;
+      renderBankEditor();
+    };
+
+    $("qPageSize").onchange = ()=>{
+      app.ui.bank.pageSize = Number($("qPageSize").value)||10;
+      app.ui.bank.page = 1;
+      renderBankEditor();
+    };
+
 
     // students
     $("addStudent").onclick = addStudent;
