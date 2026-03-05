@@ -1,6 +1,6 @@
 {
-  "name": "英文能力評估小遊戲",
-  "short_name": "英文小闖關",
+  "name": "選擇大考驗",
+  "short_name": "選擇大考驗",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
