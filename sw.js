@@ -1,5 +1,5 @@
 /* English Quiz PWA - simple offline cache */
-const CACHE_NAME = "english-quiz-pwa-v1";
+const CACHE_NAME = "english-quiz-pwa-v2";
 const PRECACHE_URLS = [
   "./",
   "./index.html",

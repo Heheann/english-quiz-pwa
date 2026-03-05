@@ -860,6 +860,7 @@
 </main>
 
 <script>
+
 /** =========================
  *  英文能力評估小遊戲 v2
  *  - 主頁更可愛
@@ -1770,9 +1771,6 @@ function renderReports(){
     if(pb.played !== pa.played) return pb.played - pa.played;
     if(pb.win !== pa.win) return pb.win - pa.win;
     return (a.name||"").localeCompare(b.name||"", "zh-Hant");
-  });
-
-
 
   // Top 3 podium
   const pod = $("podiumTop3");
@@ -1945,7 +1943,7 @@ function exportQuestionsCSV(){
       csvCell(String(q.optionCount||4))
     ].join(","));
   });
-  download(`英文能力評估_題庫_${dateStamp()}.csv`, rows.join("\\n"), "text/csv;charset=utf-8");
+  download(`英文能力評估_題庫_${dateStamp()}.csv`, rows.join("\n"), "text/csv;charset=utf-8");
 }
 
 function questionKey(q){
@@ -2022,7 +2020,7 @@ function downloadCSVTemplate(){
     "prompt,A,B,C,D,answer,category,difficulty,explain,optionCount",
     "What does “Please” mean?,請,謝謝,,,A,Basics,1,Please=請,2",
     "You want to say goodbye. Which one?,Hello,Bye,Thanks,Sorry,B,Greetings,1,Bye=再見,4"
-  ].join("\\n");
+  ].join("\n");
   download(`英文能力評估_CSV模板_${dateStamp()}.csv`, sample, "text/csv;charset=utf-8");
 }
 
@@ -2046,7 +2044,7 @@ function exportResultsCSV(){
       r.pk.pointsAgainst
     ].join(","));
   });
-  download(`英文能力評估_成績_${dateStamp()}.csv`, rows.join("\\n"), "text/csv;charset=utf-8");
+  download(`英文能力評估_成績_${dateStamp()}.csv`, rows.join("\n"), "text/csv;charset=utf-8");
 }
 
 function exportOneStudentCSV(stu){
@@ -2059,12 +2057,12 @@ function exportOneStudentCSV(stu){
     r.practice.played, r.practice.total, r.practice.correct, r.practice.best,
     r.pk.played, r.pk.win, r.pk.lose, r.pk.tie, r.pk.pointsFor, r.pk.pointsAgainst
   ].join(","));
-  download(`英文能力評估_${stu.name}_紀錄_${dateStamp()}.csv`, rows.join("\\n"), "text/csv;charset=utf-8");
+  download(`英文能力評估_${stu.name}_紀錄_${dateStamp()}.csv`, rows.join("\n"), "text/csv;charset=utf-8");
 }
 
 /** ========== CSV parser ========== */
 function parseCSVQuestions(text){
-  const lines = text.replace(/\\r/g,"").split("\\n").filter(l=>l.trim().length>0);
+  const lines = text.replace(/\r/g,"").split("\n").filter(l=>l.trim().length>0);
   if(lines.length<2) return [];
   const header = splitCSVLine(lines[0]).map(h=>h.trim());
   const idx = (name)=> header.indexOf(name);
@@ -2131,7 +2129,7 @@ function splitCSVLine(line){
 
 function csvCell(v){
   const s = (v??"").toString();
-  if(/[,"\\n]/.test(s)){
+  if(/[,"\n]/.test(s)){
     return `"${s.replace(/"/g,'""')}"`;
   }
   return s;
@@ -2433,6 +2431,7 @@ renderReports();
 // init option UI
 buildAnswerOptions(4);
 syncOptUIFromCount();
+
 </script>
 
   <!-- PK Award Modal -->

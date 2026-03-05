@@ -1,7 +1,7 @@
 {
   "name": "英文能力評估小遊戲",
   "short_name": "英文小闖關",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f7f4ff",
