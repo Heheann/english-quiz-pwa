@@ -1,8 +1,10 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>英文小闖關（PWA）</title>
+
   <!-- PWA -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#a78bfa">
@@ -11,351 +13,126 @@
   <meta name="apple-mobile-web-app-title" content="英文小闖關">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="icon" href="icons/icon-192.png">
-  <title>英文能力評估小遊戲｜題庫匯入匯出｜PK對戰</title>
+
   <style>
     :root{
-      --bg:#fbfbfd;
-      --card:#ffffff;
-      --text:#1d1d1f;
-      --muted:#6b7280;
-      --line:#e5e7eb;
-      --accent:#7c3aed;   /* cute purple */
-      --accent2:#22c55e;  /* mint */
-      --good:#16a34a;
-      --bad:#dc2626;
-      --soft:#f3f4f6;
-      --shadow: 0 12px 34px rgba(0,0,0,.10);
-      --radius: 20px;
+      --bg1:#f8f5ff;
+      --bg2:#fdf2f8;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --card:rgba(255,255,255,.82);
+      --stroke:rgba(148,163,184,.25);
+      --p1:#a78bfa;
+      --p2:#f472b6;
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --shadow:0 18px 30px rgba(2,6,23,.10);
+      --radius:22px;
     }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
-      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--ink);
       background:
-        radial-gradient(900px 520px at 15% 0%, rgba(124,58,237,.16) 0%, transparent 56%),
-        radial-gradient(800px 520px at 85% 10%, rgba(34,197,94,.14) 0%, transparent 55%),
-        radial-gradient(700px 520px at 50% 100%, rgba(59,130,246,.10) 0%, transparent 55%),
-        var(--bg);
+        radial-gradient(1200px 600px at 15% 10%, rgba(167,139,250,.28), transparent 55%),
+        radial-gradient(1200px 600px at 85% 5%, rgba(244,114,182,.20), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
     }
-
-    /* cute floating dots pattern */
-    body:before{
-      content:"";
-      position:fixed; inset:0;
-      background-image:
-        radial-gradient(circle at 20px 20px, rgba(124,58,237,.08) 0 6px, transparent 7px),
-        radial-gradient(circle at 80px 70px, rgba(34,197,94,.08) 0 7px, transparent 8px),
-        radial-gradient(circle at 140px 30px, rgba(59,130,246,.07) 0 6px, transparent 7px);
-      background-size: 180px 140px;
-      pointer-events:none;
-      opacity:.9;
+    a{color:inherit}
+    .wrap{max-width:980px;margin:0 auto;padding:18px 14px 70px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:12px 14px;border-radius:20px;background:rgba(255,255,255,.55);
+      border:1px solid rgba(167,139,250,.20);backdrop-filter: blur(8px);
     }
-
-    header{
-      position:sticky; top:0; z-index:10;
-      background: rgba(251,251,253,.86);
-      backdrop-filter: blur(10px);
-      border-bottom:1px solid var(--line);
-    }
-    .wrap{max-width:1120px;margin:0 auto;padding:16px;}
-    .topbar{display:flex; gap:12px; align-items:center; justify-content:space-between;}
-    .brand{display:flex; gap:12px; align-items:center;}
+    .brand{display:flex;align-items:center;gap:10px}
     .logo{
-      width:44px;height:44px;border-radius:16px;
-      background: linear-gradient(135deg,var(--accent),#60a5fa);
-      display:grid;place-items:center;color:white;font-weight:900;
-      box-shadow: 0 14px 32px rgba(124,58,237,.25);
-      position:relative;
-      overflow:hidden;
+      width:42px;height:42px;border-radius:16px;
+      background:linear-gradient(135deg, rgba(167,139,250,.95), rgba(244,114,182,.85));
+      display:grid;place-items:center;box-shadow:0 14px 26px rgba(167,139,250,.25);
+      color:#fff;font-weight:900;letter-spacing:.5px;
     }
-    .logo:after{
-      content:"";
-      position:absolute; inset:-40%;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.65) 0 22%, transparent 26%);
-      transform: rotate(18deg);
-      opacity:.55;
-    }
-    .brand h1{font-size:16px;margin:0;line-height:1.2}
-    .brand p{margin:0;font-size:12px;color:var(--muted)}
-    .pillbar{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
+    .brand h1{font-size:16px;margin:0}
+    .brand .sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .pillrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     .pill{
-      padding:8px 10px;border:1px solid var(--line);border-radius:999px;
-      background:var(--card);
-      display:flex;gap:8px;align-items:center;
-      font-size:12px;color:var(--muted);
+      border:1px solid rgba(167,139,250,.28);
+      background:rgba(255,255,255,.70);
+      border-radius:999px;
+      padding:10px 12px;
+      font-weight:800;
+      cursor:pointer;
+      transition:transform .14s ease, box-shadow .14s ease, filter .14s ease;
     }
-    .pill strong{color:var(--text)}
-    main{padding:18px 0 54px;}
-    .grid{display:grid;gap:14px}
-    @media(min-width:920px){
-      .grid.cols2{grid-template-columns: 1.05fr .95fr;}
-      .grid.cols3{grid-template-columns: 1fr 1fr 1fr;}
-    }
+    .pill:hover{transform:translateY(-2px);box-shadow:0 14px 24px rgba(2,6,23,.10)}
+    .pill:active{transform:translateY(-1px);filter:brightness(.98)}
+    @media (hover:none){ .pill:hover{transform:none;box-shadow:none} }
+
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-top:14px}
+    @media(max-width:860px){ .grid{grid-template-columns:1fr} }
+
     .card{
+      border:1px solid var(--stroke);
       background:var(--card);
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding:16px;
-      position:relative;
-      overflow:hidden;
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px 14px;
     }
-    .card h2{margin:0 0 10px;font-size:16px}
-    .sub{color:var(--muted);font-size:12px;margin:0 0 10px}
-    .btnrow{display:flex; gap:10px; flex-wrap:wrap;}
-    button, .btn{
-      border:1px solid var(--line);
-      background:var(--card);
+    .card h2{margin:0 0 8px;font-size:18px}
+    .card p{margin:0;color:var(--muted);line-height:1.5}
+    .btn{
+      width:100%;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:14px 14px;border-radius:18px;
+      background:rgba(255,255,255,.90);
+      border:1px solid rgba(148,163,184,.25);
+      box-shadow:0 12px 22px rgba(2,6,23,.06);
+      font-weight:900;
+      cursor:pointer;
+      transition:transform .14s ease, box-shadow .14s ease, filter .14s ease;
+    }
+    .btn:hover{transform:translateY(-3px);box-shadow:0 18px 30px rgba(2,6,23,.10)}
+    .btn:active{transform:translateY(-1px);filter:brightness(.98)}
+    @media(hover:none){ .btn:hover{transform:none;box-shadow:0 12px 22px rgba(2,6,23,.06)} }
+    .btn .left{display:flex;align-items:center;gap:10px}
+    .badge{
+      width:34px;height:34px;border-radius:14px;display:grid;place-items:center;
+      background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.25);
+    }
+    .btn small{color:var(--muted);font-weight:700}
+
+    /* Views */
+    .view{display:none}
+    .view.active{display:block}
+
+    /* Forms */
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .field{flex:1;min-width:210px}
+    label{display:block;font-size:12px;color:var(--muted);margin:10px 2px 6px}
+    select,input,textarea{
+      width:100%;
       padding:12px 12px;
       border-radius:16px;
-      cursor:pointer;
-      font-weight:800;
-      color:var(--text);
-      transition: transform .05s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
-      user-select:none;
-    }
-    button:hover{background:#f9fafb}
-    button:active{transform: translateY(1px)}
-    .primary{
-      background: linear-gradient(135deg, var(--accent), #60a5fa);
-      border-color: transparent;
-      color:white;
-      box-shadow: 0 12px 24px rgba(124,58,237,.20);
-    }
-    .primary:hover{filter: brightness(.98)}
-    .mint{
-      background: linear-gradient(135deg, var(--accent2), #38bdf8);
-      border-color: transparent;
-      color:white;
-      box-shadow: 0 12px 24px rgba(34,197,94,.16);
-    }
-    .danger{background:#fee2e2;border-color:#fecaca;color:#7f1d1d}
-    .good{background:#dcfce7;border-color:#bbf7d0;color:#14532d}
-    .ghost{background:transparent}
-    .tiny{padding:8px 10px;border-radius:14px;font-size:12px}
-    .tag{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:6px 10px;border-radius:999px;border:1px solid var(--line);
-      background:var(--soft);font-size:12px;color:var(--muted);
-    }
-    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
-    input, select, textarea{
-      width:100%;
-      padding:10px 12px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background:white;
-      font-size:14px;
+      border:1px solid rgba(148,163,184,.30);
+      background:rgba(255,255,255,.88);
       outline:none;
+      font-size:14px;
     }
-    textarea{min-height:80px;resize:vertical}
-    label{font-size:12px;color:var(--muted);display:block;margin:10px 0 6px}
-    .hr{height:1px;background:var(--line);margin:12px 0}
-    .list{display:grid;gap:10px}
-    .item{
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:12px;
-      background: #fff;
-      display:flex;gap:10px;align-items:flex-start;justify-content:space-between;
+    textarea{min-height:92px;resize:vertical}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .primary{
+      background:linear-gradient(135deg, rgba(167,139,250,.95), rgba(244,114,182,.86));
+      color:#fff;border:none;
     }
-    .item .meta{display:flex;gap:10px;align-items:flex-start;}
-    .avatar{
-      width:44px;height:44px;border-radius:18px;background:var(--soft);
-      display:grid;place-items:center;font-size:22px;
-      border:1px solid var(--line);
-      flex:0 0 auto;
-    }
-    .item h3{margin:0;font-size:14px}
-    .item p{margin:2px 0 0;font-size:12px;color:var(--muted)}
-    .item .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .bigTitle{font-size:20px;margin:0 0 8px}
-    .notice{
-      background: rgba(124,58,237,.08);
-      border:1px solid rgba(124,58,237,.18);
-      color:#3b1b88;
-      padding:10px 12px;
-      border-radius:18px;
-      font-size:13px;
-    }
-    .notice.green{
-      background: rgba(34,197,94,.10);
-      border-color: rgba(34,197,94,.20);
-      color:#0f5132;
-    }
-    .center{display:grid;place-items:center;text-align:center}
-    .hidden{display:none !important}
-    .qPrompt{font-size:18px;line-height:1.35;margin:0 0 10px}
-    .choices{display:grid;gap:10px}
-    @media(min-width:760px){ .choices{grid-template-columns: 1fr 1fr;}}
-    .choice{
-      border:1px solid var(--line);
-      border-radius:20px;
-      padding:14px;
-      background:white;
-      cursor:pointer;
-      display:flex; gap:10px; align-items:flex-start;
-      transition: border-color .15s ease, transform .05s ease, background .15s ease;
-      min-height:64px;
-      position:relative;
-      overflow:hidden;
-    }
-    .choice:hover{background:#f9fafb}
-    .choice:active{transform: translateY(1px)}
-    .choice .key{
-      width:34px;height:34px;border-radius:14px;
-      background:var(--soft);border:1px solid var(--line);
-      display:grid;place-items:center;font-weight:900;color:var(--muted);
-      flex:0 0 auto;
-    }
-    .choice .txt{font-size:15px;line-height:1.25}
-    .choice.correct{border-color:rgba(34,197,94,.55);background:rgba(34,197,94,.08)}
-    .choice.wrong{border-color:rgba(220,38,38,.45);background:rgba(220,38,38,.06)}
-    .scoreboard{display:grid;gap:10px;}
-    @media(min-width:760px){ .scoreboard{grid-template-columns: 1fr 1fr;}}
-    .scorecard{
-      border:1px solid var(--line); border-radius:20px; padding:12px;
-      background: white;
-      display:flex;gap:10px;align-items:center;justify-content:space-between;
-    }
-    .scoreLeft{display:flex;gap:10px;align-items:center}
-    .scoreName{font-weight:900}
-    .scoreNum{font-size:22px;font-weight:900}
-    .flash{animation: pop .22s ease;}
-    @keyframes pop { from{transform:scale(.98)} to{transform:scale(1)} }
-    .kbd{
-      font-size:12px;color:var(--muted);
-      border:1px dashed var(--line);
-      padding:10px 12px;border-radius:16px;background: #fff;
-    }
-    .footerNote{font-size:12px;color:var(--muted);margin-top:10px}
+    .ghost{background:rgba(255,255,255,.65)}
+    .tiny{padding:10px 12px;border-radius:14px;font-weight:900}
+    .danger{border:1px solid rgba(239,68,68,.35);background:rgba(254,242,242,.90)}
+    .ok{border:1px solid rgba(34,197,94,.35);background:rgba(240,253,244,.92)}
 
-    /* Cute Home hero */
-    .hero{
-      padding:18px 16px 16px;
-      border-radius: 26px;
-      background:
-        radial-gradient(600px 220px at 15% 10%, rgba(124,58,237,.18) 0%, transparent 60%),
-        radial-gradient(520px 220px at 85% 20%, rgba(34,197,94,.16) 0%, transparent 62%),
-        linear-gradient(135deg, rgba(255,255,255,.85), rgba(255,255,255,.65));
-      border: 1px solid rgba(255,255,255,.6);
-      box-shadow: 0 16px 40px rgba(0,0,0,.08);
-      position:relative;
-      overflow:hidden;
-    }
-
-    /* Home big actions (clear & clickable) */
-    .homeActions{
-      margin-top:14px;
-      display:grid;
-      gap:12px;
-      grid-template-columns:1fr;
-    }
-    @media(min-width:760px){ .homeActions{grid-template-columns:1fr 1fr;} }
-
-    .bigAction{
-      width:100%;
-      text-align:left;
-      padding:16px 16px;
-      border-radius:22px;
-      min-height:78px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:4px;
-      box-shadow: 0 10px 22px rgba(0,0,0,.06);
-    }
-    .bigAction .btTitle{font-size:16px;font-weight:950;letter-spacing:.2px}
-    .bigAction .btSub{font-size:12px;color:var(--muted);font-weight:800;line-height:1.25}
-    .bigAction.primary .btSub,
-    .bigAction.mint .btSub{color: rgba(255,255,255,.86)}
-
-    /* Podium top 3 */
-    .podium{
-      display:grid;
-      gap:12px;
-      grid-template-columns:1fr;
-      margin-top:10px;
-    }
-    @media(min-width:760px){ .podium{grid-template-columns:1fr 1fr 1fr;} }
-    .podiumCard{
-      position:relative;
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:14px 14px 12px;
-      background:white;
-      box-shadow: 0 10px 22px rgba(0,0,0,.06);
-      overflow:hidden;
-    }
-    .podiumCard .badge{position:absolute; right:12px; top:10px; font-size:26px;}
-    .podiumCard .rank{font-size:13px;color:var(--muted);font-weight:950}
-    .podiumCard .name{font-size:18px;font-weight:950;margin-top:4px}
-    .podiumCard .meta{margin-top:6px;font-size:12px;color:var(--muted);font-weight:850;line-height:1.35}
-
-    .podiumCard.first{border-color: rgba(245,158,11,.35); background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,251,235,.75));}
-    .podiumCard.second{border-color: rgba(148,163,184,.35); background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(241,245,249,.75));}
-    .podiumCard.third{border-color: rgba(234,179,8,.20); background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(254,249,195,.55));}
-
-    .mascot{
-      position:absolute;
-      right:14px; top:14px;
-      width:92px; height:92px;
-      border-radius: 30px;
-      background: linear-gradient(135deg, rgba(124,58,237,.20), rgba(96,165,250,.18));
-      border:1px solid rgba(124,58,237,.18);
-      display:grid; place-items:center;
-      font-size:46px;
-      transform: rotate(3deg);
-    }
-    .mascot small{
-      position:absolute; bottom:8px; right:10px;
-      font-size:12px;
-      color: rgba(29,29,31,.55);
-      font-weight:900;
-      transform: rotate(-3deg);
-    }
-
-    /* Correct celebration overlay */
-    #celebrate{
-      position:fixed; inset:0;
-      pointer-events:none;
-      display:none;
-      z-index:9999;
-    }
-    .spark{
-      position:absolute;
-      font-size:22px;
-      opacity:0;
-      transform: translateY(0) scale(.9);
-      animation: sparkUp .65s ease-out forwards;
-      filter: drop-shadow(0 6px 10px rgba(0,0,0,.12));
-    }
-    @keyframes sparkUp{
-      0%{opacity:0; transform: translateY(14px) scale(.85) rotate(0deg)}
-      15%{opacity:1}
-      100%{opacity:0; transform: translateY(-120px) scale(1.15) rotate(18deg)}
-    }
-
-    /* correct micro wiggle */
-    .wiggle{ animation: wiggle .25s ease-in-out 1; }
-    @keyframes wiggle{
-      0%{transform:translateY(0)}
-      40%{transform:translateY(-2px)}
-      100%{transform:translateY(0)}
-    }
-
-    /* option count UI */
-    .optCountBox{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    @media(max-width:520px){
-      .optCountBox{grid-template-columns:1fr;}
-    }
-  
-    /* ===== Mobile-first (Pastel) Game UI ===== */
+    /* Game UI (mobile-first) */
     .hudBar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:12px 0 10px}
     .hudPill{flex:1;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:16px;
       background:rgba(255,255,255,.78);border:1px solid rgba(167,139,250,.25);backdrop-filter: blur(6px)}
@@ -365,2095 +142,1208 @@
     .qBox{position:relative;margin:14px 0 14px;padding:18px 16px;border-radius:22px;
       background:rgba(255,255,255,.82);border:2px dashed rgba(244,114,182,.55)}
     .qBadge{position:absolute;left:12px;top:-14px;background:rgba(244,114,182,.95);color:white;
-      padding:6px 12px;border-radius:999px;font-weight:800;letter-spacing:.5px;box-shadow:0 10px 20px rgba(244,114,182,.25)}
-    .qPrompt{margin:0;text-align:center;font-size:20px;line-height:1.5;font-weight:800;color:#2a2a2a;white-space:pre-wrap}
+      padding:6px 12px;border-radius:999px;font-weight:900;letter-spacing:.5px;box-shadow:0 10px 20px rgba(244,114,182,.25)}
+    .qPrompt{margin:0;text-align:center;font-size:20px;line-height:1.5;font-weight:900;color:#2a2a2a;white-space:pre-wrap}
     .choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media(max-width:420px){ .choices{grid-template-columns:1fr;} .qPrompt{font-size:18px} .hudPill strong{font-size:16px} }
     .choice{cursor:pointer;border-radius:18px;padding:14px 14px;min-height:68px;display:flex;gap:10px;align-items:flex-start;
       background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.25);box-shadow:0 10px 20px rgba(2,6,23,.06);
-      transition:transform .14s ease, box-shadow .14s ease, filter .14s ease}
+      transition:transform .14s ease, box-shadow .14s ease, filter .14s ease;user-select:none}
     .choice .key{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;
       background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.25);font-weight:900}
-    .choice .txt{flex:1;font-size:18px;font-weight:700;color:#111827;line-height:1.35;word-break:break-word}
+    .choice .txt{flex:1;font-size:18px;font-weight:800;color:#111827;line-height:1.35;word-break:break-word}
     .choice:hover{transform:translateY(-3px);box-shadow:0 16px 28px rgba(2,6,23,.10)}
     .choice:active{transform:translateY(-1px);filter:brightness(.98)}
     @media (hover:none){ .choice:hover{transform:none;box-shadow:0 10px 20px rgba(2,6,23,.06)} }
+    .choice.disabled{pointer-events:none;opacity:.92}
+    .choice.correct{border-color:rgba(34,197,94,.55);background:rgba(240,253,244,.92)}
+    .choice.wrong{border-color:rgba(239,68,68,.55);background:rgba(254,242,242,.92)}
+    .answerNote{margin-top:10px;text-align:center;color:var(--muted);font-weight:800}
 
-    /* Tabs in reports */
-    .tabbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .tab{border-radius:999px;padding:10px 12px;font-weight:800;border:1px solid rgba(167,139,250,.28);background:rgba(255,255,255,.7)}
-    .tab.active{background:rgba(167,139,250,.18);border-color:rgba(167,139,250,.55)}
-    .tab:focus{outline:2px solid rgba(244,114,182,.45);outline-offset:2px}
+    /* Lists */
+    .list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+    .item{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:12px 12px;border-radius:18px;border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.78);
+    }
+    .item .left{display:flex;gap:10px;align-items:center}
+    .emoji{width:34px;height:34px;border-radius:14px;display:grid;place-items:center;background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.25)}
+    .meta{font-size:12px;color:var(--muted);font-weight:700}
 
-    /* Award modal */
+    /* Podium */
+    .podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+    @media(max-width:560px){ .podium{grid-template-columns:1fr;}}
+    .pod{padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.22);background:rgba(255,255,255,.80);box-shadow:0 16px 26px rgba(2,6,23,.08)}
+    .pod .rank{font-size:12px;color:var(--muted);font-weight:900}
+    .pod .name{font-size:16px;font-weight:1000;margin-top:4px}
+    .pod .stat{margin-top:8px;font-weight:900}
+
+    /* Modal */
     .modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;
       background:rgba(15,23,42,.45);backdrop-filter: blur(6px)}
+    .modal.hidden{display:none}
     .modalCard{max-width:560px;width:100%;border-radius:26px;background:rgba(255,255,255,.95);
       box-shadow:0 30px 60px rgba(2,6,23,.25);padding:18px 18px 14px;border:1px solid rgba(167,139,250,.25)}
-    .awardTitle{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .awardTitle h2{margin:0}
-    .awardBig{margin:14px 0 10px;padding:14px 14px;border-radius:20px;background:linear-gradient(135deg, rgba(167,139,250,.20), rgba(244,114,182,.18));
-      border:1px solid rgba(244,114,182,.25)}
-    .awardBig .who{font-size:22px;font-weight:900;text-align:center}
-    .awardBig .sum{margin-top:8px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-    .awardChip{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.75);border:1px solid rgba(148,163,184,.22);font-weight:800}
-    .awardBtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .awardBtns button{flex:1;min-width:160px}
+    .modalCard h3{margin:0 0 8px}
+    .hr{height:1px;background:rgba(148,163,184,.20);margin:12px 0}
+    .note{font-size:12px;color:var(--muted);line-height:1.55}
 
-</style>
+    /* Confetti */
+    .confetti{
+      position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:9998;
+    }
+    .conf{
+      position:absolute;font-size:22px;will-change:transform,opacity;
+      animation:fall 900ms ease-out forwards;
+      filter: drop-shadow(0 10px 18px rgba(2,6,23,.12));
+    }
+    @keyframes fall{
+      from{transform:translate3d(var(--x), var(--y), 0) scale(.9);opacity:1}
+      to{transform:translate3d(var(--x2), calc(var(--y) + 160px), 0) rotate(20deg);opacity:0}
+    }
+
+    footer{
+      position:fixed;left:0;right:0;bottom:0;
+      background:rgba(255,255,255,.62);border-top:1px solid rgba(148,163,184,.18);
+      backdrop-filter: blur(10px);
+      padding:8px 10px;
+    }
+    .nav{max-width:980px;margin:0 auto;display:flex;gap:10px;justify-content:space-between;align-items:center}
+    .nav button{flex:1}
+  </style>
 </head>
 <body>
-<header>
-  <div class="wrap topbar">
-    <div class="brand">
-      <div class="logo">EN</div>
-      <div>
-        <h1>實用英文能力評估小遊戲</h1>
-        <p>四選一題庫・可匯入匯出・可選學生・PK對戰・特教友善</p>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">EN</div>
+        <div>
+          <h1>英文小闖關</h1>
+          <div class="sub">練習 / PK / 排行榜 / 題庫與學生名單（可匯入匯出）</div>
+        </div>
+      </div>
+      <div class="pillrow">
+        <button class="pill" id="btnHomeTop" type="button">🏠</button>
+        <button class="pill" id="btnReportsTop" type="button">🏆 排行</button>
+        <button class="pill" id="btnBankTop" type="button">📦 題庫</button>
+        <button class="pill" id="btnStudentsTop" type="button">👥 學生</button>
       </div>
     </div>
-    <div class="pillbar">
-      <div class="pill"><span>題庫</span><strong id="pillQCount">0</strong></div>
-      <div class="pill"><span>學生</span><strong id="pillSCount">0</strong></div>
-      <div class="pill"><span>TTS</span><strong id="pillTTS">OFF</strong></div>
-      <button class="tiny" id="btnHome">回首頁</button>
+
+    <!-- HOME -->
+    <section class="view active" id="viewHome">
+      <div class="grid">
+        <div class="card">
+          <h2>今天要玩哪一種？</h2>
+          <p>把四選一變成遊戲：練習答題、PK 競賽、看排行榜，讓學生更願意做測驗。</p>
+          <div class="actions" style="margin-top:14px">
+            <button class="btn primary" id="goPractice" type="button">
+              <span class="left"><span class="badge">🧩</span>單人練習</span>
+              <small>按答對率統計</small>
+            </button>
+            <button class="btn primary" id="goPK" type="button">
+              <span class="left"><span class="badge">⚔️</span>PK 競賽</span>
+              <small>按勝率排行</small>
+            </button>
+            <button class="btn" id="goReports" type="button">
+              <span class="left"><span class="badge">🏆</span>排行榜</span>
+              <small>前3名＋完整排行</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>小設定</h2>
+          <div class="row">
+            <div class="field">
+              <label>🔊 TTS 朗讀（用裝置語音）</label>
+              <select id="ttsToggle">
+                <option value="off">關閉</option>
+                <option value="on">開啟</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>⚙️ 每題答錯顯示答案時間</label>
+              <select id="revealMs">
+                <option value="2000" selected>2 秒（推薦）</option>
+                <option value="1500">1.5 秒</option>
+                <option value="2500">2.5 秒</option>
+                <option value="3000">3 秒</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn ghost tiny" id="btnReset" type="button"><span class="left"><span class="badge">🧹</span>重置資料</span><small>清空紀錄（不建議）</small></button>
+          </div>
+          <div class="note" style="margin-top:8px">提示：PWA 安裝後，第一次載入完成就可以離線使用。若更新檔案，請重整或清除快取。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRACTICE SETUP -->
+    <section class="view" id="viewPractice">
+      <div class="card">
+        <h2>🧩 單人練習設定</h2>
+        <div class="row">
+          <div class="field">
+            <label>學生</label>
+            <select id="practiceStudent"></select>
+          </div>
+          <div class="field">
+            <label>題數</label>
+            <select id="practiceCount">
+              <option>5</option><option>10</option><option selected>20</option><option>30</option><option>40</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>題庫分類（可留空）</label>
+            <select id="practiceCat"></select>
+          </div>
+          <div class="field">
+            <label>隨機出題</label>
+            <select id="practiceShuffle">
+              <option value="yes" selected>是</option>
+              <option value="no">否</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="startPractice" type="button"><span class="left"><span class="badge">▶</span>開始練習</span><small>進入答題</small></button>
+          <button class="btn" id="backHome1" type="button"><span class="left"><span class="badge">↩</span>回首頁</span><small></small></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PK SETUP -->
+    <section class="view" id="viewPK">
+      <div class="card">
+        <h2>⚔️ PK 競賽設定</h2>
+        <div class="row">
+          <div class="field">
+            <label>玩家 A</label>
+            <select id="pkA"></select>
+          </div>
+          <div class="field">
+            <label>玩家 B</label>
+            <select id="pkB"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>題數</label>
+            <select id="pkCount">
+              <option>6</option><option selected>10</option><option>14</option><option>20</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>輪流作答</label>
+            <select id="pkTurn">
+              <option value="alt" selected>每題輪流</option>
+              <option value="half">前半 A / 後半 B</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="startPK" type="button"><span class="left"><span class="badge">▶</span>開始 PK</span><small>進入答題</small></button>
+          <button class="btn" id="backHome2" type="button"><span class="left"><span class="badge">↩</span>回首頁</span><small></small></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section class="view" id="viewGame">
+      <div class="card">
+        <div class="hudBar">
+          <div class="hudPill"><span>🏆 分數</span><strong id="hudScore">0</strong></div>
+          <div class="hudPill"><span>題數</span><strong id="hudCount">0/0</strong></div>
+        </div>
+        <div class="progressWrap" aria-label="進度條">
+          <div class="progressInner" id="progressInner"></div>
+        </div>
+
+        <div class="qBox">
+          <div class="qBadge" id="qBadge">Q1</div>
+          <div class="qPrompt" id="promptText"></div>
+        </div>
+
+        <div class="choices" id="choiceBox"></div>
+        <div class="answerNote" id="answerNote"></div>
+
+        <div class="actions">
+          <button class="btn ghost tiny" id="ttsRead" type="button"><span class="left"><span class="badge">🔊</span>朗讀本題</span><small></small></button>
+          <button class="btn tiny" id="quitGame" type="button"><span class="left"><span class="badge">⏹</span>結束</span><small></small></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="view" id="viewReports">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:end;gap:10px">
+          <div>
+            <h2 style="margin:0 0 6px">🏆 排行榜</h2>
+            <p class="note" style="margin:0">⚔️ PK：用勝率排行；🧩 練習：用答對率排行。</p>
+          </div>
+          <div class="row" style="justify-content:flex-end">
+            <button class="pill" id="tabPK" type="button">⚔️ PK</button>
+            <button class="pill" id="tabPractice" type="button">🧩 練習</button>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+        <h2 id="leaderTopTitle" style="margin:0 0 8px">PK 勝率前三名</h2>
+        <div class="podium" id="podiumTop3"></div>
+
+        <div class="hr"></div>
+        <h2 id="leaderListTitle" style="margin:0 0 8px">完整排行</h2>
+        <div class="list" id="leaderList"></div>
+
+        <div class="hr"></div>
+        <div class="actions">
+          <button class="btn" id="backHome3" type="button"><span class="left"><span class="badge">↩</span>回首頁</span><small></small></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BANK -->
+    <section class="view" id="viewBank">
+      <div class="card">
+        <h2>📦 題庫管理（匯入 / 匯出）</h2>
+        <p class="note">支援 JSON（建議）。你可以「整包覆蓋匯入」或「追加題目匯入」。</p>
+
+        <div class="row">
+          <div class="field">
+            <label>目前題庫數量</label>
+            <input id="bankCount" readonly>
+          </div>
+          <div class="field">
+            <label>分類（自動偵測）</label>
+            <input id="bankCats" readonly>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="exportBank" type="button"><span class="left"><span class="badge">⬇</span>匯出題庫 JSON</span><small></small></button>
+          <label class="btn" style="cursor:pointer">
+            <span class="left"><span class="badge">⬆</span>匯入題庫（覆蓋）</span>
+            <input id="importBankFile" type="file" accept=".json,application/json" hidden>
+          </label>
+          <label class="btn" style="cursor:pointer">
+            <span class="left"><span class="badge">➕</span>匯入題庫（追加）</span>
+            <input id="appendBankFile" type="file" accept=".json,application/json" hidden>
+          </label>
+        </div>
+
+        <div class="hr"></div>
+        <h2 style="margin:0 0 8px">快速編輯（貼上多題）</h2>
+        <p class="note">把題目貼在下面，我會嘗試解析成 JSON（格式：每題一行：題目｜A｜B｜C｜D｜正確(1-4)）。</p>
+        <textarea id="quickPaste" placeholder="例：\n( ) EXIT 是什麼？｜入口｜出口｜廁所｜停車場｜2"></textarea>
+        <div class="actions">
+          <button class="btn ok" id="quickToJson" type="button"><span class="left"><span class="badge">✨</span>解析成題庫（追加）</span><small></small></button>
+          <button class="btn" id="backHome4" type="button"><span class="left"><span class="badge">↩</span>回首頁</span><small></small></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STUDENTS -->
+    <section class="view" id="viewStudents">
+      <div class="card">
+        <h2>👥 學生名單（可在後台修改）</h2>
+        <p class="note">為了安全，預設使用「王小明」類的匿名名字。你可以在這裡改名、新增、刪除。</p>
+
+        <div class="row">
+          <div class="field">
+            <label>目前學生數量</label>
+            <input id="stuCount" readonly>
+          </div>
+          <div class="field">
+            <label>名單匯入/匯出</label>
+            <div class="actions" style="margin-top:0">
+              <button class="btn primary tiny" id="exportStudents" type="button"><span class="left"><span class="badge">⬇</span>匯出</span><small></small></button>
+              <label class="btn tiny" style="cursor:pointer">
+                <span class="left"><span class="badge">⬆</span>匯入（覆蓋）</span>
+                <input id="importStudentsFile" type="file" accept=".json,application/json" hidden>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+        <div class="list" id="studentsEditor"></div>
+
+        <div class="actions">
+          <button class="btn ok" id="addStudent" type="button"><span class="left"><span class="badge">➕</span>新增學生</span><small></small></button>
+          <button class="btn primary" id="saveStudents" type="button"><span class="left"><span class="badge">💾</span>儲存名單</span><small>立即生效</small></button>
+          <button class="btn" id="backHome5" type="button"><span class="left"><span class="badge">↩</span>回首頁</span><small></small></button>
+        </div>
+
+        <div class="note">提示：改名不會刪掉既有紀錄（統計會跟著同一個學生 ID 走）。如果你想「重新開始」，請用首頁的「重置資料」。</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Award Modal -->
+  <div id="awardOverlay" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="awardH">
+    <div class="modalCard">
+      <h3 id="awardH">🎉 PK 頒獎時間</h3>
+      <div id="awardWinner" style="font-size:20px;font-weight:1000;text-align:center;margin:8px 0 10px">冠軍：—</div>
+      <div id="awardSummary" class="row" style="justify-content:center;gap:8px;flex-wrap:wrap"></div>
+      <div class="hr"></div>
+      <div class="podium" id="awardPodium"></div>
+      <div class="hr"></div>
+      <div class="actions">
+        <button class="btn primary" id="awardRematch" type="button"><span class="left"><span class="badge">🔁</span>再來一局</span><small></small></button>
+        <button class="btn" id="awardToReports" type="button"><span class="left"><span class="badge">🏆</span>看排行榜</span><small></small></button>
+        <button class="btn" id="awardHome" type="button"><span class="left"><span class="badge">🏠</span>回首頁</span><small></small></button>
+      </div>
+      <div class="note">如果你更新了題庫或名單，請在排行榜頁重新整理一次。</div>
     </div>
   </div>
-</header>
 
-<div id="celebrate"></div>
+  <div class="confetti" id="confetti"></div>
 
-<main class="wrap">
-  <!-- HOME -->
-  <section id="viewHome" class="grid cols2">
-    <div class="card">
-      <div class="hero homeHero">
-        <div class="mascot">🧸<small>OK!</small></div>
-        <h2 class="bigTitle">今天來玩「英文小闖關」！</h2>
-        <p class="sub">把能力評估的四選一變成遊戲：練習、PK、排行榜。按大按鈕就能開始！</p>
-
-        <div class="homeActions" aria-label="首頁功能按鈕">
-          <button class="bigAction primary" id="goPractice">
-            <div class="btTitle">🧩 練習模式</div>
-            <div class="btSub">單人｜可選題數與類別</div>
-          </button>
-          <button class="bigAction mint" id="goPK">
-            <div class="btTitle">⚔️ PK 對戰</div>
-            <div class="btSub">雙人｜輪流或搶答</div>
-          </button>
-          <button class="bigAction" id="goReports">
-            <div class="btTitle">🏆 成績／排行榜</div>
-            <div class="btSub">看前三名＋匯出紀錄</div>
-          </button>
-          <button class="bigAction" id="goTeacher">
-            <div class="btTitle">🧑‍🏫 老師後台</div>
-            <div class="btSub">管理學生＆題庫（可追加匯入）</div>
-          </button>
-        </div>
-      </div>
-
-      <div class="hr"></div>
-      <div class="notice">
-        ✅ 你可以把題庫做成「實用英文」：問路、點餐、時間、校園用語、生活情境。<br/>
-        ✅ 這份檔案離線可用（不需要網路）。
-      </div>
-
-      <p class="footerNote">
-        資料存在此瀏覽器（localStorage）。若換電腦，請先「匯出全部」再帶走。
-      </p>
+  <footer>
+    <div class="nav">
+      <button class="pill" id="navHome" type="button">🏠 首頁</button>
+      <button class="pill" id="navPractice" type="button">🧩 練習</button>
+      <button class="pill" id="navPK" type="button">⚔️ PK</button>
+      <button class="pill" id="navReports" type="button">🏆 排行</button>
     </div>
-
-    <div class="card">
-      <h2>快速開關</h2>
-      <p class="sub">依學生狀況調整：TTS、動態效果（答對動畫/停留時間）。</p>
-
-      <div class="row">
-        <span class="tag">🔊 TTS 語音朗讀</span>
-        <button id="toggleTTS" class="good">切換：<span id="ttsState">OFF</span></button>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <span class="tag">🎞️ 動態效果</span>
-        <button id="toggleMotion">切換：<span id="motionState">ON</span></button>
-      </div>
-
-      <div class="hr"></div>
-
-      <h2>一鍵備份 / 還原（推薦）</h2>
-      <p class="sub">把題庫＋學生＋成績整包帶走。</p>
-      <div class="btnrow">
-        <button id="exportAll">⬇️ 匯出全部（JSON）</button>
-        <label class="btn" for="importAllFile" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
-          ⬆️ 匯入全部（JSON）
-        </label>
-        <input id="importAllFile" type="file" accept=".json" class="hidden" />
-      </div>
-
-      <div class="hr"></div>
-
-      <div class="notice green">
-        小撇步：先用「練習 5 題」暖身，再進 PK，學生通常更願意投入。
-      </div>
-    </div>
-  </section>
-
-  <!-- TEACHER -->
-  <section id="viewTeacher" class="grid cols2 hidden">
-    <div class="card">
-      <h2>學生名單</h2>
-      <p class="sub">新增/編輯學生（名字＋emoji）。</p>
-
-      <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
-        <div>
-          <label>學生名字</label>
-          <input id="stuName" placeholder="例如：Amy" />
-        </div>
-        <div>
-          <label>頭像（emoji）</label>
-          <input id="stuEmoji" placeholder="例如：🐻" />
-        </div>
-      </div>
-      <div class="btnrow" style="margin-top:10px">
-        <button class="primary" id="addStudent">➕ 新增學生</button>
-        <button class="danger" id="wipeStudents">🗑️ 清空學生（小心）</button>
-      </div>
-
-      <div class="hr"></div>
-      <div id="studentList" class="list"></div>
-    </div>
-
-    <div class="card">
-      <h2>題庫管理</h2>
-      <p class="sub">支援 2 / 3 / 4 選項（你可在後台決定每題要幾個選項）。</p>
-      <div id="editBanner" class="notice hidden" style="margin:10px 0 12px">
-        ✏️ <strong id="editBannerText">正在編輯</strong>　（修改完按「儲存修改」，或按「取消編輯」）
-      </div>
-
-
-      <label>題目（題幹）</label>
-      <textarea id="qPrompt" placeholder="例如：What does “Thank you” mean?"></textarea>
-
-      <div class="optCountBox">
-        <div>
-          <label>這題要幾個選項？</label>
-          <select id="qOptCount">
-            <option value="2">2 個選項</option>
-            <option value="3">3 個選項</option>
-            <option value="4" selected>4 個選項</option>
-          </select>
-        </div>
-        <div>
-          <label>正確答案</label>
-          <select id="qAnswer"></select>
-        </div>
-      </div>
-
-      <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
-        <div>
-          <label>選項 A</label>
-          <input id="optA" placeholder="例如：謝謝" />
-        </div>
-        <div>
-          <label>選項 B</label>
-          <input id="optB" placeholder="例如：對不起" />
-        </div>
-        <div id="wrapC">
-          <label>選項 C</label>
-          <input id="optC" placeholder="例如：你好" />
-        </div>
-        <div id="wrapD">
-          <label>選項 D</label>
-          <input id="optD" placeholder="例如：再見" />
-        </div>
-      </div>
-
-      <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
-        <div>
-          <label>類別（可空）</label>
-          <input id="qCat" placeholder="例如：Greetings / School / Food" />
-        </div>
-        <div>
-          <label>難度（1~3）</label>
-          <select id="qDiff">
-            <option value="1">1（簡單）</option>
-            <option value="2">2（中等）</option>
-            <option value="3">3（較難）</option>
-          </select>
-        </div>
-      </div>
-
-      <label>解析（可空）</label>
-      <input id="qExplain" placeholder="例如：Thank you = 謝謝" />
-
-      <div class="btnrow" style="margin-top:10px">
-        <button class="primary" id="addQuestion">➕ 新增題目</button>
-        <button class="tiny hidden" id="cancelEdit">取消編輯</button>
-        <button id="exportQuestions">⬇️ 匯出題庫（JSON）</button>
-        <button id="exportQuestionsCSV">⬇️ 匯出題庫（CSV）</button>
-        <label class="btn" for="importQuestionsFile">⬆️ 匯入題庫（覆蓋）（JSON/CSV）</label>
-        <input id="importQuestionsFile" type="file" accept=".json,.csv" class="hidden"/>
-        <label class="btn" for="importQuestionsAppendFile">➕ 追加匯入題目（不覆蓋）（JSON/CSV）</label>
-        <input id="importQuestionsAppendFile" type="file" accept=".json,.csv" class="hidden"/>
-      </div>
-
-      <div class="hr"></div>
-      <div class="btnrow">
-        <button class="danger" id="wipeQuestions">🗑️ 清空題庫（小心）</button>
-        <button id="downloadCSVTemplate">📄 下載 CSV 模板</button>
-      </div>
-
-      <p class="footerNote">
-        CSV 欄位：prompt,A,B,C,D,answer(=A/B/C/D),category,difficulty,explain,optionCount(可省略)
-      </p>
-
-      <div class="hr"></div>
-      <h2>題庫列表</h2>
-      <div id="questionList" class="list"></div>
-    </div>
-  </section>
-
-  <!-- PRACTICE SETUP -->
-  <section id="viewPracticeSetup" class="grid cols2 hidden">
-    <div class="card">
-      <h2>練習模式：設定</h2>
-      <p class="sub">選學生 → 題數 → 類別（可選）→ 開始。</p>
-
-      <label>選擇學生</label>
-      <select id="practiceStudent"></select>
-
-      <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
-        <div>
-          <label>題數</label>
-          <select id="practiceCount">
-            <option>5</option><option>8</option><option>10</option><option>15</option><option>20</option>
-          </select>
-        </div>
-        <div>
-          <label>類別（可選）</label>
-          <select id="practiceCat"></select>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <span class="tag">🔊 TTS</span>
-        <button id="toggleTTS2" class="good">切換：<span id="ttsState2">OFF</span></button>
-      </div>
-
-      <div class="btnrow" style="margin-top:12px">
-        <button class="primary" id="startPractice">開始練習</button>
-        <button id="backHome1">回首頁</button>
-      </div>
-
-      <div class="hr"></div>
-      <div class="notice">
-        小技巧：如果學生閱讀困難，開 TTS，並讓他點選項聽朗讀。
-      </div>
-    </div>
-
-    <div class="card center">
-      <h2>暖身建議</h2>
-      <p class="sub" style="max-width:520px">
-        先 5 題簡單題建立信心，再進 PK 會更穩。
-      </p>
-      <div class="kbd">點題目或選項可朗讀（TTS ON）。</div>
-    </div>
-  </section>
-
-  <!-- PK SETUP -->
-  <section id="viewPKSetup" class="grid cols2 hidden">
-    <div class="card">
-      <h2>PK 對戰：設定</h2>
-      <p class="sub">兩位學生同場競賽。可選「搶答」或「輪流」。</p>
-
-      <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
-        <div>
-          <label>玩家 A</label>
-          <select id="pkA"></select>
-        </div>
-        <div>
-          <label>玩家 B</label>
-          <select id="pkB"></select>
-        </div>
-      </div>
-
-      <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
-        <div>
-          <label>題數</label>
-          <select id="pkCount">
-            <option>5</option><option>8</option><option selected>10</option><option>15</option><option>20</option>
-          </select>
-        </div>
-        <div>
-          <label>出題類別（可選）</label>
-          <select id="pkCat"></select>
-        </div>
-      </div>
-
-      <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
-        <div>
-          <label>對戰模式</label>
-          <select id="pkMode">
-            <option value="buzz" selected>搶答制（先搶到才能答）</option>
-            <option value="turn">輪流制（A答一題→B答一題）</option>
-          </select>
-        </div>
-        <div>
-          <label>答對得分</label>
-          <select id="pkPoint">
-            <option value="1" selected>1 分</option>
-            <option value="2">2 分</option>
-            <option value="3">3 分</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <span class="tag">🔊 TTS</span>
-        <button id="toggleTTS3" class="good">切換：<span id="ttsState3">OFF</span></button>
-      </div>
-
-      <div class="btnrow" style="margin-top:12px">
-        <button class="mint" id="startPK">開始 PK</button>
-        <button id="backHome2">回首頁</button>
-      </div>
-
-      <div class="hr"></div>
-      <div class="notice">
-        搶答制適合一台裝置兩人玩：先按「我要搶答」再作答，競爭感強但不會亂點。
-      </div>
-    </div>
-
-    <div class="card center">
-      <h2>小提示</h2>
-      <p class="sub" style="max-width:520px">
-        若學生衝動按鍵，你可以先用「輪流制」讓規則更穩，再換「搶答制」。
-      </p>
-      <div class="kbd">老師可當裁判：答完請學生口語說出理由或翻譯。</div>
-    </div>
-  </section>
-
-  <!-- GAME -->
-  <section id="viewGame" class="grid cols2 hidden">
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div>
-          <h2 id="gameTitle">遊戲中</h2>
-          <div class="sub" id="gameMeta"></div>
-        </div>
-        <div class="btnrow">
-          <button class="tiny" id="speakPrompt">🔊 朗讀題目</button>
-          <button class="tiny" id="skipQ">⏭️ 跳過</button>
-          <button class="tiny danger" id="endGame">結束</button>
-        </div>
-      </div>
-
-      <div class="hr"></div>
-
-      <div id="buzzBar" class="row hidden" style="justify-content:space-between;align-items:stretch">
-        <button class="primary" style="flex:1" id="buzzA">🙋 玩家 A：我要搶答</button>
-        <button class="primary" style="flex:1" id="buzzB">🙋 玩家 B：我要搶答</button>
-      </div>
-
-      <div id="turnBar" class="notice hidden"></div>
-
-      <div class="hr"></div>
-
-      <div class="hudBar">
-        <div class="hudPill"><span>🏆 分數</span><strong id="hudScore">0</strong></div>
-        <div class="hudPill"><span>題數</span><strong id="hudCount">0/0</strong></div>
-      </div>
-      <div class="progressWrap" aria-label="進度條">
-        <div class="progressInner" id="progressInner"></div>
-      </div>
-
-      <div class="qBox">
-        <div class="qBadge" id="qBadge">Q1</div>
-        <div class="qPrompt" id="promptText"></div>
-      </div>
-
-      <div class="choices" id="choiceBox"></div>
-
-      <div class="hr"></div>
-      <div id="feedback" class="notice hidden"></div>
-    </div>
-
-    <div class="card">
-      <h2>比分</h2>
-      <div class="scoreboard">
-        <div class="scorecard" id="scoreABox">
-          <div class="scoreLeft">
-            <div class="avatar" id="avatarA">A</div>
-            <div>
-              <div class="scoreName" id="nameA">玩家A</div>
-              <div class="sub" id="statA">答對 0 / 0</div>
-            </div>
-          </div>
-          <div class="scoreNum" id="scoreA">0</div>
-        </div>
-
-        <div class="scorecard" id="scoreBBox">
-          <div class="scoreLeft">
-            <div class="avatar" id="avatarB">B</div>
-            <div>
-              <div class="scoreName" id="nameB">玩家B</div>
-              <div class="sub" id="statB">答對 0 / 0</div>
-            </div>
-          </div>
-          <div class="scoreNum" id="scoreB">0</div>
-        </div>
-      </div>
-
-      <div class="hr"></div>
-      <h2>進度</h2>
-      <div class="notice" id="progressBox">第 1 題 / 10 題</div>
-
-      <div class="hr"></div>
-      <h2>本局設定</h2>
-      <div class="sub" id="ruleBox"></div>
-
-      <div class="footerNote">
-        ※ 成績會自動存檔（到「成績/排行榜」可查看與匯出）。
-      </div>
-    </div>
-  </section>
-
-  <!-- REPORTS -->
-  <section id="viewReports" class="grid cols2 hidden">
-    <div class="card">
-      <h2>成績 / 排行榜</h2>
-      <p class="sub">查看學生總成績、PK 對戰紀錄，並可匯出 CSV。</p>
-
-      <div class="btnrow">
-        <button id="exportResultsCSV">⬇️ 匯出成績（CSV）</button>
-        <button class="danger" id="wipeResults">🗑️ 清空成績（小心）</button>
-        <button id="backHome3">回首頁</button>
-      </div>
-
-      <div class="hr"></div>
-
-      <div class="row" style="justify-content:space-between;align-items:end;gap:10px">
-        <div>
-          <h2 style="margin-bottom:6px">排行榜</h2>
-          <p class="sub" style="margin:0">⚔️ PK 以「勝率」排行；🧩 練習以「答對率」排行。</p>
-        </div>
-        <div class="tabbar">
-          <button class="tab active" id="tabPK" type="button">⚔️ PK 排行</button>
-          <button class="tab" id="tabPractice" type="button">🧩 練習排行</button>
-        </div>
-      </div>
-
-      <div class="hr"></div>
-      <h2 id="leaderTopTitle">PK 勝率前三名</h2>
-      <div id="podiumTop3" class="podium"></div>
-
-      <div class="hr"></div>
-      <h2 id="leaderListTitle">完整排行</h2>
-      <div id="leaderList" class="list"></div>
-    </div>
-
-    <div class="card">
-      <h2>最近對戰 / 練習紀錄</h2>
-      <p class="sub">用於學期末整理、家長溝通、或能力評估前的練習證據。</p>
-      <div id="reportLogs" class="list"></div>
-    </div>
-  </section>
-</main>
+  </footer>
 
 <script>
+(() => {
+  "use strict";
 
-/** =========================
- *  英文能力評估小遊戲 v2
- *  - 主頁更可愛
- *  - 每題可設定選項數（2/3/4）
- *  - 答對小動畫（sparkles）
- *  - 單檔可離線使用｜題庫匯入匯出｜選學生｜練習&PK｜成績匯出
- *  ========================= */
+  const STORAGE_KEY = "english_quiz_pwa_v3";
+  const $ = (id) => document.getElementById(id);
 
-const STORAGE_KEY = "ability_quiz_pk_v2";
+  const uid = (p="id") => `${p}_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
+  const nowISO = () => new Date().toISOString();
+  const escapeHTML = (s="") => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 
-const app = {
-  data: {
-    settings: { tts:false, motion:true },
-    students: [],
-    questions: [],
-    results: { perStudent: {}, logs: [] }
-  },
-  game: null
-};
-
-const $ = (id) => document.getElementById(id);
-
-let editingQId = null; // 題庫「上方表單」的編輯模式
-
-function uid(prefix="id"){
-  return prefix + "_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
-}
-
-function save(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(app.data));
-  refreshPills();
-}
-
-function load(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw){
-    try{ app.data = JSON.parse(raw); }
-    catch(e){ console.warn(e); }
-  }
-
-  // migrate from v1 if exists and v2 is empty
-  if(!raw){
-    const old = localStorage.getItem("ability_quiz_pk_v1");
-    if(old){
-      try{
-        const oldData = JSON.parse(old);
-        // shallow import and normalize
-        app.data = oldData;
-      }catch(e){}
+  // ===== Default data (匿名名單) =====
+  const DEFAULT_DATA = {
+    version: 3,
+    createdAt: nowISO(),
+    settings: { tts: false, revealMs: 2000 },
+    students: [
+      { id: "stu_wxm", name: "王小明", emoji: "🙂" },
+      { id: "stu_cxh", name: "陳小華", emoji: "😊" },
+      { id: "stu_lxm", name: "林小美", emoji: "🌸" },
+      { id: "stu_zyu", name: "張小宇", emoji: "🚀" },
+      { id: "stu_ltt", name: "李小婷", emoji: "🍓" },
+      { id: "stu_zxa", name: "趙小安", emoji: "🐻" }
+    ],
+    questions: [
+      { id: uid("q"), prompt:"( ) 看到「EXIT」表示？", options:["入口","出口","廁所","停車場"], answer:1, category:"公共標示", explain:"EXIT = 出口" },
+      { id: uid("q"), prompt:"( ) 「ENTRANCE」是？", options:["出口","入口","電梯","樓梯"], answer:1, category:"公共標示", explain:"ENTRANCE = 入口" },
+      { id: uid("q"), prompt:"( ) 想上廁所要找？", options:["INFORMATION","TOILET / RESTROOM","PARKING","STAIRS"], answer:1, category:"公共標示", explain:"TOILET/RESTROOM = 廁所" },
+      { id: uid("q"), prompt:"( ) 老師說：Be quiet！學生應該？", options:["保持微笑","保持安靜","保持冷靜","保持距離"], answer:1, category:"課堂指令", explain:"Be quiet = 安靜" },
+      { id: uid("q"), prompt:"( ) P.M. 7:00 是？", options:["早上7點","晚上7點","中午12點","凌晨1點"], answer:1, category:"時間", explain:"P.M. = 下午/晚上" }
+    ],
+    results: {
+      perStudent: {}, // filled by ensureStats
+      logs: []
     }
-  }
+  };
 
-  if(!app.data.results) app.data.results = { perStudent:{}, logs:[] };
-  if(!app.data.settings) app.data.settings = { tts:false, motion:true };
-  if(!Array.isArray(app.data.students)) app.data.students = [];
-  if(!Array.isArray(app.data.questions)) app.data.questions = [];
+  const app = {
+    data: null,
+    ui: { view: "viewHome", leaderMode: "pk" },
+    game: null, // {type, questions, index, cat, shuffle, revealMs, tts, playerA, playerB, turnMode, currentTurn}
+  };
 
-  // seed demo if empty
-  if(app.data.students.length===0){
-    app.data.students = [
-      {id:uid("stu"), name:"榕芝", emoji:"🦊"},
-      {id:uid("stu"), name:"侑臻", emoji:"🐼"},
-      {id:uid("stu"), name:"昱辰", emoji:"🦁"},
-    ];
-  }
-  if(app.data.questions.length===0){
-    app.data.questions = [
-      {
-        id: uid("q"),
-        prompt: "What does “Thank you” mean?",
-        options: ["謝謝","對不起","你好","再見"],
-        optionCount: 4,
-        answer: 0,
-        category: "Basics",
-        difficulty: 1,
-        explain: "Thank you = 謝謝"
-      },
-      {
-        id: uid("q"),
-        prompt: "You want to say goodbye. Which one?",
-        options: ["Hello","Bye","Please","Thanks"],
-        optionCount: 4,
-        answer: 1,
-        category: "Greetings",
-        difficulty: 1,
-        explain: "Bye = 再見"
-      },
-      {
-        id: uid("q"),
-        prompt: "In class, you want to borrow an eraser. You say…",
-        options: ["Can I borrow an eraser?","I am hungry.","Where is the bathroom?","Good night."],
-        optionCount: 4,
-        answer: 0,
-        category: "School",
-        difficulty: 2,
-        explain: "borrow = 借"
-      },
-      {
-        id: uid("q"),
-        prompt: "Which one means “請”？",
-        options: ["Please","Sorry","",""],
-        optionCount: 2,
-        answer: 0,
-        category: "Basics",
-        difficulty: 1,
-        explain: "Please = 請"
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        app.data = JSON.parse(raw);
+      }else{
+        app.data = structuredClone(DEFAULT_DATA);
+        save();
       }
-    ];
-  }
-
-  // normalize questions (optionCount etc.)
-  app.data.questions = app.data.questions.map(q => normalizeQuestion(q));
-
-  // ensure stats containers
-  app.data.students.forEach(s=> ensureStudentStats(s.id));
-
-  save();
-}
-
-function refreshPills(){
-  $("pillQCount").textContent = app.data.questions.length;
-  $("pillSCount").textContent = app.data.students.length;
-  $("pillTTS").textContent = app.data.settings.tts ? "ON" : "OFF";
-  $("ttsState").textContent = app.data.settings.tts ? "ON" : "OFF";
-  $("ttsState2").textContent = app.data.settings.tts ? "ON" : "OFF";
-  $("ttsState3").textContent = app.data.settings.tts ? "ON" : "OFF";
-  $("motionState").textContent = app.data.settings.motion ? "ON" : "OFF";
-}
-
-function show(viewId){
-  const views = ["viewHome","viewTeacher","viewPracticeSetup","viewPKSetup","viewGame","viewReports"];
-  views.forEach(v => $(v).classList.add("hidden"));
-  $(viewId).classList.remove("hidden");
-  if(viewId==="viewTeacher"){ cancelEdit(); renderStudents(); renderQuestions(); syncOptUIFromCount(); }
-  if(viewId==="viewPracticeSetup"){ renderPracticeSetup(); }
-  if(viewId==="viewPKSetup"){ renderPKSetup(); }
-  if(viewId==="viewReports"){ renderReports(); }
-}
-
-function toast(text, ms=1400){
-  const fb = $("feedback");
-  fb.classList.remove("hidden");
-  fb.textContent = text;
-  setTimeout(()=> fb.classList.add("hidden"), ms);
-}
-
-function speak(text){
-  if(!app.data.settings.tts) return;
-  if(!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "zh-TW";
-  u.rate = 1;
-  u.pitch = 1;
-  window.speechSynthesis.speak(u);
-}
-
-function normalizeOptions(opts){
-  const arr = (opts||[]).slice(0,4);
-  while(arr.length<4) arr.push("");
-  return arr.map(s => (s??"").toString());
-}
-
-function normalizeQuestion(q){
-  const options = normalizeOptions(q.options || [q.A,q.B,q.C,q.D]);
-  const filled = options.filter(Boolean).length;
-  let optionCount = parseInt(q.optionCount,10);
-  if(Number.isNaN(optionCount) || optionCount<2 || optionCount>4){
-    optionCount = Math.min(4, Math.max(2, filled || 4));
-  }
-  // ensure A/B exist for optionCount>=2
-  if(optionCount>=2){
-    if(!options[0]) options[0] = "（選項A）";
-    if(!options[1]) options[1] = "（選項B）";
-  }
-  // blank out beyond optionCount (but keep array length 4)
-  for(let i=optionCount;i<4;i++) options[i] = "";
-  const answer = clampInt(q.answer, 0, optionCount-1, 0);
-  return {
-    id: q.id || uid("q"),
-    prompt: (q.prompt||"").toString(),
-    options,
-    optionCount,
-    answer,
-    category: (q.category||"").toString(),
-    difficulty: clampInt(q.difficulty,1,3,1),
-    explain: (q.explain||"").toString()
-  };
-}
-
-function getCategories(){
-  const set = new Set();
-  app.data.questions.forEach(q => { if(q.category) set.add(q.category.trim()); });
-  return Array.from(set).filter(Boolean).sort((a,b)=>a.localeCompare(b,"zh-Hant"));
-}
-
-/** ========== Students ========== */
-function ensureStudentStats(id){
-  if(!app.data.results.perStudent[id]){
-    app.data.results.perStudent[id] = {
-      practice: { played:0, correct:0, total:0, best:0 },
-      pk: { played:0, win:0, lose:0, tie:0, pointsFor:0, pointsAgainst:0 }
-    };
-  }
-}
-
-function renderStudents(){
-  refreshPills();
-  const box = $("studentList");
-  box.innerHTML = "";
-  app.data.students.forEach(stu=>{
-    ensureStudentStats(stu.id);
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `
-      <div class="meta">
-        <div class="avatar">${escapeHTML(stu.emoji||"🙂")}</div>
-        <div>
-          <h3>🏆 第 ${rankIdx+1} 名｜${escapeHTML(stu.name)}</h3>
-          <p>練習：玩 ${app.data.results.perStudent[stu.id].practice.played} 次・最佳 ${app.data.results.perStudent[stu.id].practice.best}%</p>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="tiny" data-act="edit">編輯</button>
-        <button class="tiny danger" data-act="del">刪除</button>
-      </div>
-    `;
-    div.querySelector('[data-act="edit"]').onclick = ()=>{
-      const newName = prompt("修改學生名字：", stu.name);
-      if(newName===null) return;
-      const newEmoji = prompt("修改頭像 emoji：", stu.emoji||"🙂");
-      stu.name = (newName||stu.name).trim() || stu.name;
-      stu.emoji = (newEmoji||stu.emoji||"🙂").trim() || "🙂";
-      save(); renderStudents(); renderReports();
-    };
-    div.querySelector('[data-act="del"]').onclick = ()=>{
-      if(!confirm(`確定刪除學生「${stu.name}」？（成績也會一起消失）`)) return;
-      app.data.students = app.data.students.filter(s=>s.id!==stu.id);
-      delete app.data.results.perStudent[stu.id];
-      save(); renderStudents(); renderPracticeSetup(); renderPKSetup(); renderReports();
-    };
-    box.appendChild(div);
-  });
-}
-
-/** ========== Questions ========== */
-function renderQuestions(){
-  refreshPills();
-  const box = $("questionList");
-  box.innerHTML = "";
-  app.data.questions.forEach((q, idx)=>{
-    const div = document.createElement("div");
-    div.className = "item";
-    const optsShown = q.options.slice(0, q.optionCount).filter(Boolean);
-    div.innerHTML = `
-      <div class="meta">
-        <div class="avatar">Q</div>
-        <div>
-          <h3>${idx+1}. ${escapeHTML(q.prompt)}</h3>
-          <p>${escapeHTML(q.category||"未分類")} ・ 難度 ${q.difficulty||1} ・ ${q.optionCount} 選項</p>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="tiny" data-act="edit">編輯</button>
-        <button class="tiny danger" data-act="del">刪除</button>
-      </div>
-    `;
-    div.querySelector('[data-act="edit"]').onclick = ()=> startEditQuestion(q.id);
-    div.onclick = (ev)=>{ if(ev.target.closest("button")) return; startEditQuestion(q.id); };
-    div.querySelector('[data-act="del"]').onclick = ()=>{
-      if(!confirm("確定刪除這一題？")) return;
-      app.data.questions = app.data.questions.filter(x=>x.id!==q.id);
-      save(); renderQuestions();
-    };
-    box.appendChild(div);
-  });
-}
-
-function editQuestion(q){
-  const nq = {...q, options: normalizeOptions(q.options)};
-  const promptText = prompt("題幹：", nq.prompt);
-  if(promptText===null) return;
-
-  const optCount = prompt("這題要幾個選項？（2/3/4）", String(nq.optionCount||4));
-  if(optCount===null) return;
-  nq.optionCount = clampInt(optCount,2,4,4);
-
-  const a = prompt("選項A：", nq.options[0]||"");
-  if(a===null) return;
-  const b = prompt("選項B：", nq.options[1]||"");
-  if(b===null) return;
-
-  let c = nq.options[2]||"", d = nq.options[3]||"";
-  if(nq.optionCount>=3){
-    c = prompt("選項C：", c);
-    if(c===null) return;
-  } else c = "";
-  if(nq.optionCount>=4){
-    d = prompt("選項D：", d);
-    if(d===null) return;
-  } else d = "";
-
-  const ans = prompt(`正確答案（輸入 A~${["A","B","C","D"][nq.optionCount-1]}）：`, ["A","B","C","D"][nq.answer||0]);
-  if(ans===null) return;
-  const cat = prompt("類別（可空）：", nq.category||"");
-  if(cat===null) return;
-  const diff = prompt("難度 1~3：", String(nq.difficulty||1));
-  if(diff===null) return;
-  const exp = prompt("解析（可空）：", nq.explain||"");
-  if(exp===null) return;
-
-  nq.prompt = (promptText||"").trim() || nq.prompt;
-  nq.options = normalizeOptions([a,b,c,d]);
-  // blank out beyond optionCount
-  for(let i=nq.optionCount;i<4;i++) nq.options[i] = "";
-
-  const allowed = ["A","B","C","D"].slice(0,nq.optionCount);
-  const normalizedAns = (ans||"A").trim().toUpperCase();
-  nq.answer = Math.max(0, Math.min(nq.optionCount-1, allowed.indexOf(normalizedAns)));
-
-  nq.category = (cat||"").trim();
-  nq.difficulty = clampInt(diff,1,3,1);
-  nq.explain = (exp||"").trim();
-
-  // apply normalize again
-  Object.assign(q, normalizeQuestion(nq));
-  save(); renderQuestions();
-}
-
-/** ========== Setup renders ========== */
-function renderPracticeSetup(){
-  const sel = $("practiceStudent");
-  sel.innerHTML = "";
-  app.data.students.forEach(s=>{
-    const opt = document.createElement("option");
-    opt.value = s.id;
-    opt.textContent = `${s.emoji||"🙂"} ${s.name}`;
-    sel.appendChild(opt);
-  });
-
-  const catSel = $("practiceCat");
-  catSel.innerHTML = `<option value="">（全部類別）</option>`;
-  getCategories().forEach(c=>{
-    const opt = document.createElement("option");
-    opt.value = c;
-    opt.textContent = c;
-    catSel.appendChild(opt);
-  });
-
-  $("ttsState2").textContent = app.data.settings.tts ? "ON" : "OFF";
-}
-
-function renderPKSetup(){
-  const selA = $("pkA"), selB = $("pkB");
-  selA.innerHTML = ""; selB.innerHTML = "";
-  app.data.students.forEach(s=>{
-    const o1 = document.createElement("option");
-    o1.value = s.id; o1.textContent = `${s.emoji||"🙂"} ${s.name}`;
-    const o2 = o1.cloneNode(true);
-    selA.appendChild(o1); selB.appendChild(o2);
-  });
-  if(app.data.students.length>=2){
-    selA.selectedIndex = 0;
-    selB.selectedIndex = 1;
-  }
-
-  const catSel = $("pkCat");
-  catSel.innerHTML = `<option value="">（全部類別）</option>`;
-  getCategories().forEach(c=>{
-    const opt = document.createElement("option");
-    opt.value = c;
-    opt.textContent = c;
-    catSel.appendChild(opt);
-  });
-
-  $("ttsState3").textContent = app.data.settings.tts ? "ON" : "OFF";
-}
-
-/** ========== Teacher add question UI (option count) ========== */
-function buildAnswerOptions(optCount){
-  const sel = $("qAnswer");
-  const current = sel.value || "0";
-  sel.innerHTML = "";
-  const labels = ["A","B","C","D"];
-  for(let i=0;i<optCount;i++){
-    const opt = document.createElement("option");
-    opt.value = String(i);
-    opt.textContent = labels[i];
-    sel.appendChild(opt);
-  }
-  const keep = parseInt(current,10);
-  sel.value = String(Math.min(optCount-1, isNaN(keep)?0:keep));
-}
-
-function syncOptUIFromCount(){
-  const n = parseInt($("qOptCount").value,10);
-  buildAnswerOptions(n);
-  $("wrapC").style.display = (n>=3) ? "block" : "none";
-  $("wrapD").style.display = (n>=4) ? "block" : "none";
-  if(n<3) $("optC").value = "";
-  if(n<4) $("optD").value = "";
-}
-
-/** ========== 題庫：上方表單「點選→直接編輯」 ========== */
-function setEditMode(on, label){
-  const banner = $("editBanner");
-  const cancelBtn = $("cancelEdit");
-  if(on){
-    banner.classList.remove("hidden");
-    $("editBannerText").textContent = label || "正在編輯";
-    $("addQuestion").textContent = "💾 儲存修改";
-    cancelBtn.classList.remove("hidden");
-  }else{
-    editingQId = null;
-    banner.classList.add("hidden");
-    $("addQuestion").textContent = "➕ 新增題目";
-    cancelBtn.classList.add("hidden");
-  }
-}
-
-function clearQuestionForm(){
-  $("qPrompt").value="";
-  $("optA").value=""; $("optB").value=""; $("optC").value=""; $("optD").value="";
-  $("qOptCount").value="4"; syncOptUIFromCount();
-  $("qAnswer").value="0";
-  $("qCat").value=""; $("qDiff").value="1"; $("qExplain").value="";
-}
-
-function startEditQuestion(qid){
-  const q = app.data.questions.find(x=>x.id===qid);
-  if(!q) return;
-
-  editingQId = qid;
-
-  $("qPrompt").value = q.prompt || "";
-  $("qOptCount").value = String(q.optionCount || 4);
-  syncOptUIFromCount();
-
-  const opts = normalizeOptions(q.options);
-  $("optA").value = opts[0] || "";
-  $("optB").value = opts[1] || "";
-  $("optC").value = opts[2] || "";
-  $("optD").value = opts[3] || "";
-
-  $("qAnswer").value = String(q.answer || 0);
-  $("qCat").value = q.category || "";
-  $("qDiff").value = String(q.difficulty || 1);
-  $("qExplain").value = q.explain || "";
-
-  const idx = app.data.questions.findIndex(x=>x.id===qid);
-  setEditMode(true, `正在編輯：第 ${idx>=0 ? idx+1 : "？"} 題`);
-  try{ $("qPrompt").scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
-}
-
-function cancelEdit(){
-  setEditMode(false);
-  clearQuestionForm();
-}
-
-
-/** ========== Celebration (correct animation) ========== */
-function celebrate(){
-  if(!app.data.settings.motion) return;
-  const root = $("celebrate");
-  root.innerHTML = "";
-  root.style.display = "block";
-
-  const emojis = ["✨","⭐","🌟","🎉","💫"];
-  const n = 14;
-
-  for(let i=0;i<n;i++){
-    const sp = document.createElement("div");
-    sp.className = "spark";
-    sp.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-    sp.style.left = (10 + Math.random()*80) + "vw";
-    sp.style.top = (72 + Math.random()*18) + "vh";
-    sp.style.animationDelay = (Math.random()*120) + "ms";
-    sp.style.fontSize = (18 + Math.random()*12) + "px";
-    root.appendChild(sp);
-  }
-
-  setTimeout(()=>{ root.style.display="none"; root.innerHTML=""; }, 700);
-}
-
-/** ========== Game engine ========== */
-function startPractice(){
-  if(app.data.questions.length===0){
-    alert("題庫是空的，請先在『老師後台』新增或匯入題目。");
-    return;
-  }
-  const stuId = $("practiceStudent").value;
-  const count = parseInt($("practiceCount").value,10);
-  const cat = $("practiceCat").value;
-
-  const pool = app.data.questions.filter(q => !cat || (q.category||"")===cat);
-  if(pool.length===0){
-    alert("這個類別沒有題目，請換一個類別或匯入更多題目。");
-    return;
-  }
-
-  const qs = pickQuestions(pool, count);
-  app.game = {
-    type: "practice",
-    cat, count: qs.length,
-    index: 0,
-    questions: qs,
-    locked: false,
-    playerA: { id: stuId, name: getStudent(stuId).name, emoji: getStudent(stuId).emoji, score:0, correct:0, attempted:0 },
-    playerB: null,
-    point: 1,
-    mode: "practice"
-  };
-  show("viewGame");
-  setupGameUI();
-  renderQuestion();
-}
-
-function startPK(){
-  if(app.data.questions.length===0){
-    alert("題庫是空的，請先在『老師後台』新增或匯入題目。");
-    return;
-  }
-  const aId = $("pkA").value;
-  const bId = $("pkB").value;
-  if(aId===bId){
-    alert("兩位玩家不能選同一個學生。");
-    return;
-  }
-  const count = parseInt($("pkCount").value,10);
-  const cat = $("pkCat").value;
-  const mode = $("pkMode").value; // buzz / turn
-  const point = parseInt($("pkPoint").value,10);
-
-  const pool = app.data.questions.filter(q => !cat || (q.category||"")===cat);
-  if(pool.length===0){
-    alert("這個類別沒有題目，請換一個類別或匯入更多題目。");
-    return;
-  }
-
-  const qs = pickQuestions(pool, count);
-  const A = getStudent(aId), B = getStudent(bId);
-
-  app.game = {
-    type: "pk",
-    cat, count: qs.length,
-    index: 0,
-    questions: qs,
-    locked: false,
-    mode,
-    point,
-    active: null, // "A" or "B"
-    playerA: { id:aId, name:A.name, emoji:A.emoji, score:0, correct:0, attempted:0 },
-    playerB: { id:bId, name:B.name, emoji:B.emoji, score:0, correct:0, attempted:0 }
-  };
-
-  show("viewGame");
-  setupGameUI();
-  renderQuestion();
-}
-
-function setupGameUI(){
-  refreshPills();
-  const g = app.game;
-  $("feedback").classList.add("hidden");
-
-  if(g.type==="practice"){
-    $("gameTitle").textContent = "練習模式";
-    $("nameA").textContent = `${g.playerA.name}`;
-    $("avatarA").textContent = g.playerA.emoji||"🙂";
-    $("scoreA").textContent = "0";
-    $("statA").textContent = `答對 0 / 0`;
-    $("scoreBBox").classList.add("hidden");
-    $("buzzBar").classList.add("hidden");
-    $("turnBar").classList.add("hidden");
-    $("ruleBox").textContent = `單人練習｜每題作答後立即回饋｜類別：${g.cat||"全部"}`;
-  }else{
-    $("gameTitle").textContent = "PK 對戰";
-    $("scoreBBox").classList.remove("hidden");
-    $("nameA").textContent = `${g.playerA.name}`;
-    $("avatarA").textContent = g.playerA.emoji||"🙂";
-    $("nameB").textContent = `${g.playerB.name}`;
-    $("avatarB").textContent = g.playerB.emoji||"🙂";
-    $("scoreA").textContent = "0";
-    $("scoreB").textContent = "0";
-    $("statA").textContent = `答對 0 / 0`;
-    $("statB").textContent = `答對 0 / 0`;
-
-    if(g.mode==="buzz"){
-      $("buzzBar").classList.remove("hidden");
-      $("turnBar").classList.add("hidden");
-      g.active = null; // wait for buzz
-      enableChoices(false);
-      $("buzzA").textContent = `🙋 ${g.playerA.name}：我要搶答`;
-      $("buzzB").textContent = `🙋 ${g.playerB.name}：我要搶答`;
-    }else{
-      $("buzzBar").classList.add("hidden");
-      $("turnBar").classList.remove("hidden");
-      g.active = "A";
-      $("turnBar").textContent = `輪到：${g.playerA.name} 作答`;
-      enableChoices(true);
+    }catch(e){
+      app.data = structuredClone(DEFAULT_DATA);
+      save();
     }
-    $("ruleBox").textContent = `${g.mode==="buzz"?"搶答制":"輪流制"}｜答對 +${g.point} 分｜類別：${g.cat||"全部"}`;
-  }
-  updateProgress();
-}
+    // migrate minimal
+    app.data.settings ||= { tts:false, revealMs:2000 };
+    app.data.students ||= [];
+    app.data.questions ||= [];
+    app.data.results ||= { perStudent:{}, logs:[] };
+    // ensure stats
+    app.data.students.forEach(s=>ensureStats(s.id));
+    // init settings UI
+    $("ttsToggle").value = app.data.settings.tts ? "on" : "off";
+    $("revealMs").value = String(app.data.settings.revealMs || 2000);
 
-function renderQuestion(){
-  const g = app.game;
-  if(!g) return;
+    hydrateSelects();
+    refreshBankInfo();
+    renderStudentsEditor();
+    renderReports();
+    bindUI();
 
-  g.locked = false;
-  $("feedback").classList.add("hidden");
-
-  const q = g.questions[g.index];
-  $("promptText").textContent = q.prompt;
-  $("gameMeta").textContent = `${q.category||"未分類"}・難度 ${q.difficulty||1}・${q.optionCount} 選項`;
-
-  if(g.type==="pk" && g.mode==="buzz"){
-    g.active = null; // wait buzz each question
-    enableChoices(false);
-  } else {
-    enableChoices(true);
-  }
-
-  const labels = ["A","B","C","D"];
-  const box = $("choiceBox");
-  box.innerHTML = "";
-
-  // only show up to optionCount
-  const opts = normalizeOptions(q.options).slice(0, q.optionCount);
-  opts.forEach((txt, i)=>{
-    const div = document.createElement("div");
-    div.className = "choice";
-    div.innerHTML = `
-      <div class="key">${labels[i]}</div>
-      <div class="txt">${escapeHTML(txt)}</div>
-    `;
-    div.onclick = ()=> onChoose(i);
-    // click to speak
-    div.addEventListener("dblclick", ()=> speak(`${labels[i]}：${txt}`));
-    box.appendChild(div);
-  });
-
-  if(app.data.settings.tts){
-    speak(`題目：${q.prompt}`);
-  }
-
-  updateProgress();
-}
-
-function enableChoices(on){
-  const box = $("choiceBox");
-  box.style.opacity = on ? "1" : ".55";
-  box.style.pointerEvents = on ? "auto" : "none";
-}
-
-function onChoose(choiceIndex){
-  const g = app.game;
-  if(!g || g.locked) return;
-
-  if(g.type==="pk" && g.mode==="buzz"){
-    if(!g.active){
-      toast("先搶答！", 900);
-      speak("先搶答");
-      return;
+    // PWA SW
+    if("serviceWorker" in navigator){
+      window.addEventListener("load", ()=> navigator.serviceWorker.register("./sw.js").catch(()=>{}));
     }
   }
 
-  g.locked = true;
-  const q = g.questions[g.index];
-  const correct = (choiceIndex === (q.answer||0));
-
-  if(g.type==="practice"){
-    g.playerA.attempted++;
-    if(correct){ g.playerA.correct++; g.playerA.score += 1; }
-  }else{
-    const p = (g.active==="B") ? g.playerB : g.playerA;
-    p.attempted++;
-    if(correct){ p.correct++; p.score += g.point; }
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(app.data));
   }
 
-  // UI feedback on choices
-  const cNodes = Array.from($("choiceBox").children);
-  if(cNodes[q.answer||0]) cNodes[q.answer||0].classList.add("correct");
-  if(!correct && cNodes[choiceIndex]) cNodes[choiceIndex].classList.add("wrong");
-
-  // correct animation
-  if(correct){
-    if(cNodes[choiceIndex]) cNodes[choiceIndex].classList.add("wiggle");
-    celebrate();
+  function ensureStats(studentId){
+    const ps = app.data.results.perStudent;
+    if(!ps[studentId]){
+      ps[studentId] = {
+        practice: { total:0, correct:0, best:0, played:0 },
+        pk: { played:0, win:0, lose:0, tie:0, pointsFor:0, pointsAgainst:0 }
+      };
+    }
+    return ps[studentId];
   }
 
-  const who = (g.type==="practice") ? g.playerA.name : ((g.active==="B")?g.playerB.name:g.playerA.name);
-  const ansLabel = ["A","B","C","D"][q.answer||0];
-  const ansText = normalizeOptions(q.options)[q.answer||0];
-
-  $("feedback").classList.remove("hidden");
-  $("feedback").textContent =
-    correct
-      ? `✅ ${who} 答對了！`
-      : `❌ ${who} 答錯了。正確答案是 ${ansLabel}：${ansText}${q.explain? "（"+q.explain+"）":""}`;
-
-  if(app.data.settings.tts){
-    speak(correct ? `${who} 答對了` : `${who} 答錯了。正確答案是 ${ansText}`);
+  function show(viewId){
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    const el = $(viewId);
+    if(el) el.classList.add("active");
+    app.ui.view = viewId;
+    if(viewId==="viewReports") renderReports();
+    if(viewId==="viewBank") refreshBankInfo();
+    if(viewId==="viewStudents") { renderStudentsEditor(); hydrateSelects(); }
   }
 
-  updateScoreUI();
+  function hydrateSelects(){
+    // Students options
+    const opts = app.data.students.map(s=>`<option value="${escapeHTML(s.id)}">${escapeHTML(s.emoji||"🙂")} ${escapeHTML(s.name)}</option>`).join("");
+    ["practiceStudent","pkA","pkB"].forEach(id=>{ const sel=$(id); if(sel) sel.innerHTML = opts; });
 
-  const delay = correct ? (app.data.settings.motion ? 900 : 300) : 2000;
+    // Categories
+    const cats = Array.from(new Set(app.data.questions.map(q=> (q.category||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"zh-Hant"));
+    const catOpts = ['<option value="">（全部）</option>'].concat(cats.map(c=>`<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`)).join("");
+    const pc = $("practiceCat");
+    if(pc) pc.innerHTML = catOpts;
 
-  setTimeout(()=>{
-    nextQuestion();
-  }, delay);
-}
-
-function nextQuestion(){
-  const g = app.game;
-  if(!g) return;
-
-  g.index++;
-  if(g.index >= g.questions.length){
-    finishGame();
-    return;
+    // counts
+    $("stuCount").value = String(app.data.students.length);
   }
 
-  if(g.type==="pk" && g.mode==="turn"){
-    g.active = (g.active==="A") ? "B" : "A";
-    $("turnBar").textContent = `輪到：${g.active==="A"?g.playerA.name:g.playerB.name} 作答`;
+  function refreshBankInfo(){
+    $("bankCount").value = String(app.data.questions.length);
+    const cats = Array.from(new Set(app.data.questions.map(q=> (q.category||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"zh-Hant"));
+    $("bankCats").value = cats.length ? cats.join("、") : "（無）";
   }
 
-  renderQuestion();
-}
-
-function finishGame(){
-  const g = app.game;
-  if(!g) return;
-
-  const now = new Date();
-  const ts = now.toISOString();
-
-  if(g.type==="practice"){
-    ensureStudentStats(g.playerA.id);
-    const s = app.data.results.perStudent[g.playerA.id].practice;
-    s.played++;
-    s.correct += g.playerA.correct;
-    s.total += g.playerA.attempted;
-    const pct = g.playerA.attempted ? Math.round((g.playerA.correct/g.playerA.attempted)*100) : 0;
-    s.best = Math.max(s.best, pct);
-
-    app.data.results.logs.unshift({
-      id: uid("log"),
-      type: "practice",
-      time: ts,
-      student: g.playerA.name,
-      category: g.cat||"",
-      total: g.playerA.attempted,
-      correct: g.playerA.correct,
-      score: pct
+  // ===== Students editor =====
+  function renderStudentsEditor(){
+    const box = $("studentsEditor");
+    if(!box) return;
+    box.innerHTML = "";
+    app.data.students.forEach((s, idx)=>{
+      const row = document.createElement("div");
+      row.className = "item";
+      row.dataset.id = s.id;
+      row.innerHTML = `
+        <div class="left" style="flex:1;min-width:220px">
+          <div class="emoji"><input aria-label="emoji" data-k="emoji" value="${escapeHTML(s.emoji||"🙂")}" style="width:100%;border:none;background:transparent;text-align:center;font-size:18px;padding:0"></div>
+          <div style="flex:1">
+            <div style="font-weight:1000;margin-bottom:4px">學生 ${idx+1}</div>
+            <input data-k="name" value="${escapeHTML(s.name)}" placeholder="例如：王小明">
+            <div class="meta">ID：${escapeHTML(s.id)}</div>
+          </div>
+        </div>
+        <div class="row" style="justify-content:flex-end">
+          <button class="pill tiny danger" data-act="del" type="button">刪除</button>
+        </div>
+      `;
+      box.appendChild(row);
     });
 
-    alert(`練習結束！
-${g.playerA.name}
-答對 ${g.playerA.correct} / ${g.playerA.attempted}
-正確率 ${pct}%`);
-    app.game = null;
-    show("viewReports");
-  }else{
-    ensureStudentStats(g.playerA.id);
-    ensureStudentStats(g.playerB.id);
-    const a = app.data.results.perStudent[g.playerA.id].pk;
-    const b = app.data.results.perStudent[g.playerB.id].pk;
+    // delegate input update (local, not saved until saveStudents)
+    box.querySelectorAll("input[data-k]").forEach(inp=>{
+      inp.addEventListener("input", ()=>{
+        const item = inp.closest(".item");
+        if(!item) return;
+        const id = item.dataset.id;
+        const k = inp.dataset.k;
+        const stu = app.data.students.find(x=>x.id===id);
+        if(stu){
+          stu[k] = inp.value.trim() || (k==="emoji" ? "🙂" : stu[k]);
+        }
+      });
+    });
+
+    box.querySelectorAll('button[data-act="del"]').forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const item = btn.closest(".item");
+        if(!item) return;
+        const id = item.dataset.id;
+        if(app.data.students.length<=1){
+          alert("至少要保留 1 位學生。");
+          return;
+        }
+        if(confirm("確定要刪除這位學生嗎？（統計紀錄也會一起消失）")){
+          app.data.students = app.data.students.filter(s=>s.id!==id);
+          delete app.data.results.perStudent[id];
+          save();
+          hydrateSelects();
+          renderStudentsEditor();
+          renderReports();
+        }
+      });
+    });
+
+    $("stuCount").value = String(app.data.students.length);
+  }
+
+  function addStudent(){
+    const id = uid("stu");
+    app.data.students.push({ id, name:"王小明", emoji:"🙂" });
+    ensureStats(id);
+    save();
+    hydrateSelects();
+    renderStudentsEditor();
+  }
+
+  function saveStudents(){
+    // basic validation
+    app.data.students.forEach(s=>{
+      s.name = (s.name||"王小明").trim() || "王小明";
+      s.emoji = (s.emoji||"🙂").trim() || "🙂";
+    });
+    save();
+    hydrateSelects();
+    renderReports();
+    alert("✅ 已儲存學生名單！");
+  }
+
+  function exportStudents(){
+    const payload = { version: 1, exportedAt: new Date().toISOString().slice(0,10), students: app.data.students };
+    downloadJSON(payload, "students.json");
+  }
+
+  function importStudentsReplace(file){
+    readJSONFile(file).then(obj=>{
+      if(!obj || !Array.isArray(obj.students)) throw new Error("格式不正確：找不到 students[]");
+      const cleaned = obj.students
+        .filter(x=>x && typeof x.name==="string")
+        .map(x=>({ id: x.id || uid("stu"), name: String(x.name).trim() || "王小明", emoji: String(x.emoji||"🙂").trim() || "🙂" }));
+      if(cleaned.length<1) throw new Error("至少要有 1 位學生");
+      app.data.students = cleaned;
+      // ensure stats for all
+      cleaned.forEach(s=>ensureStats(s.id));
+      // remove stats for missing
+      Object.keys(app.data.results.perStudent).forEach(id=>{
+        if(!cleaned.some(s=>s.id===id)) delete app.data.results.perStudent[id];
+      });
+      save();
+      hydrateSelects();
+      renderStudentsEditor();
+      renderReports();
+      alert(`✅ 已匯入學生名單（覆蓋）：${cleaned.length} 人`);
+    }).catch(e=>alert("匯入失敗：" + e.message));
+  }
+
+  // ===== Bank import/export =====
+  function downloadJSON(obj, filename){
+    const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1200);
+  }
+
+  function readJSONFile(file){
+    return new Promise((resolve,reject)=>{
+      const fr = new FileReader();
+      fr.onload = ()=> {
+        try{ resolve(JSON.parse(fr.result)); }catch(e){ reject(new Error("不是有效的 JSON")); }
+      };
+      fr.onerror = ()=>reject(new Error("讀取檔案失敗"));
+      fr.readAsText(file, "utf-8");
+    });
+  }
+
+  function exportBank(){
+    const payload = { version: 2, exportedAt: new Date().toISOString().slice(0,10), questions: app.data.questions.map(q=>({
+      prompt:q.prompt, options:q.options, optionCount:q.options?.length||4, answer:q.answer, category:q.category||"", difficulty:q.difficulty||1, explain:q.explain||""
+    }))};
+    downloadJSON(payload, "question-bank.json");
+  }
+
+  function normalizeImportedQuestions(obj){
+    const qs = obj.questions || obj.items || obj.bank;
+    if(!Array.isArray(qs)) throw new Error("格式不正確：找不到 questions[]");
+    const out = qs.map((q)=>{
+      const prompt = String(q.prompt||q.question||"").trim();
+      const options = Array.isArray(q.options) ? q.options.map(x=>String(x)) : [];
+      const answer = Number(q.answer);
+      if(!prompt || options.length<2 || !Number.isFinite(answer)) return null;
+      return {
+        id: uid("q"),
+        prompt,
+        options: options.slice(0, q.optionCount || options.length),
+        answer: clamp(answer,0,options.length-1),
+        category: String(q.category||"").trim(),
+        difficulty: Number(q.difficulty||1) || 1,
+        explain: String(q.explain||"").trim()
+      };
+    }).filter(Boolean);
+    if(out.length<1) throw new Error("沒有可用題目");
+    return out;
+  }
+
+  function importBankReplace(file){
+    readJSONFile(file).then(obj=>{
+      const qs = normalizeImportedQuestions(obj);
+      app.data.questions = qs;
+      save();
+      hydrateSelects();
+      refreshBankInfo();
+      renderReports();
+      alert(`✅ 已匯入題庫（覆蓋）：${qs.length} 題`);
+    }).catch(e=>alert("匯入失敗：" + e.message));
+  }
+
+  function importBankAppend(file){
+    readJSONFile(file).then(obj=>{
+      const qs = normalizeImportedQuestions(obj);
+      app.data.questions = app.data.questions.concat(qs);
+      save();
+      hydrateSelects();
+      refreshBankInfo();
+      alert(`✅ 已追加題庫：+${qs.length} 題（目前共 ${app.data.questions.length} 題）`);
+    }).catch(e=>alert("匯入失敗：" + e.message));
+  }
+
+  // Quick paste -> append
+  function quickPasteToJson(){
+    const raw = $("quickPaste").value || "";
+    const lines = raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+    if(!lines.length){ alert("先貼上題目內容唷～"); return; }
+    const out=[];
+    for(const line of lines){
+      const parts = line.split("|").map(x=>x.trim());
+      if(parts.length<6) continue;
+      const prompt = parts[0];
+      const options = parts.slice(1,5);
+      const ans = Number(parts[5]) - 1;
+      if(!prompt || options.some(o=>!o) || !Number.isFinite(ans)) continue;
+      out.push({ id:uid("q"), prompt, options, answer: clamp(ans,0,3), category:"", explain:"" });
+    }
+    if(!out.length){ alert("解析不到題目～請確認格式：題目｜A｜B｜C｜D｜正確(1-4)"); return; }
+    app.data.questions = app.data.questions.concat(out);
+    save();
+    hydrateSelects();
+    refreshBankInfo();
+    alert(`✅ 已追加 ${out.length} 題！`);
+    $("quickPaste").value="";
+  }
+
+  // ===== Game =====
+  function pickQuestions(count, cat, shuffle){
+    let pool = app.data.questions.slice();
+    if(cat) pool = pool.filter(q=>(q.category||"").trim()===cat);
+    if(!pool.length) return [];
+    if(shuffle){
+      for(let i=pool.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [pool[i],pool[j]] = [pool[j],pool[i]];
+      }
+    }
+    return pool.slice(0, count);
+  }
+
+  function startPractice(){
+    const sid = $("practiceStudent").value;
+    const stu = app.data.students.find(s=>s.id===sid);
+    const count = Number($("practiceCount").value)||20;
+    const cat = $("practiceCat").value || "";
+    const shuffle = $("practiceShuffle").value === "yes";
+    const qs = pickQuestions(count, cat, shuffle);
+    if(qs.length<1){ alert("題庫沒有題目，或分類下沒有題目。請先匯入題庫。"); return; }
+
+    app.game = {
+      type:"practice",
+      questions: qs,
+      index:0,
+      cat,
+      shuffle,
+      revealMs: Number(app.data.settings.revealMs)||2000,
+      tts: !!app.data.settings.tts,
+      playerA: { id: stu.id, name: stu.name, emoji: stu.emoji||"🙂", score:0, correct:0, attempted:0 }
+    };
+    show("viewGame");
+    renderQuestion();
+  }
+
+  function startPK(){
+    const aId = $("pkA").value, bId = $("pkB").value;
+    if(aId===bId){ alert("A 與 B 請選不同學生"); return; }
+    const A = app.data.students.find(s=>s.id===aId);
+    const B = app.data.students.find(s=>s.id===bId);
+    const count = Number($("pkCount").value)||10;
+    const turnMode = $("pkTurn").value || "alt";
+    const qs = pickQuestions(count, "", true);
+    if(qs.length<1){ alert("題庫沒有題目。請先匯入題庫。"); return; }
+
+    app.game = {
+      type:"pk",
+      questions: qs,
+      index:0,
+      cat:"",
+      shuffle:true,
+      revealMs: Number(app.data.settings.revealMs)||2000,
+      tts: !!app.data.settings.tts,
+      playerA: { id:A.id, name:A.name, emoji:A.emoji||"🙂", score:0 },
+      playerB: { id:B.id, name:B.name, emoji:B.emoji||"🙂", score:0 },
+      turnMode,
+      currentTurn: "A" // A starts
+    };
+    show("viewGame");
+    renderQuestion();
+  }
+
+  function currentPlayerLabel(){
+    const g = app.game;
+    if(!g) return "";
+    if(g.type==="practice") return `${g.playerA.emoji} ${g.playerA.name}`;
+    const turn = g.currentTurn==="A" ? g.playerA : g.playerB;
+    return `現在輪到：${turn.emoji} ${turn.name}`;
+  }
+
+  function updateHud(){
+    const g = app.game;
+    if(!g) return;
+
+    if(g.type==="practice"){
+      $("hudScore").textContent = String(g.playerA.score);
+    }else{
+      $("hudScore").textContent = `${g.playerA.score} : ${g.playerB.score}`;
+    }
+    $("hudCount").textContent = `${g.index+1}/${g.questions.length}`;
+    $("qBadge").textContent = `Q${g.index+1}`;
+
+    const pct = Math.round(((g.index+1)/Math.max(1,g.questions.length))*100);
+    $("progressInner").style.width = pct + "%";
+  }
+
+  function renderQuestion(){
+    const g = app.game;
+    if(!g) return;
+    updateHud();
+
+    const q = g.questions[g.index];
+    $("answerNote").textContent = g.type==="pk" ? currentPlayerLabel() : "";
+    $("promptText").textContent = q.prompt || "";
+
+    const box = $("choiceBox");
+    box.innerHTML = "";
+    const labels = ["(1)","(2)","(3)","(4)","(5)","(6)"];
+    (q.options||[]).forEach((opt, i)=>{
+      const btn = document.createElement("div");
+      btn.className = "choice";
+      btn.innerHTML = `<div class="key">${labels[i]||String(i+1)}</div><div class="txt">${escapeHTML(opt)}</div>`;
+      btn.onclick = ()=> choose(i);
+      box.appendChild(btn);
+    });
+
+    // auto TTS for question?
+    if(g.tts){
+      // a short delay to avoid overlap
+      setTimeout(()=> speakQuestion(), 120);
+    }
+  }
+
+  function lockChoices(){
+    document.querySelectorAll(".choice").forEach(c=>c.classList.add("disabled"));
+  }
+
+  function choose(i){
+    const g = app.game;
+    if(!g) return;
+    const q = g.questions[g.index];
+    lockChoices();
+
+    const choices = Array.from(document.querySelectorAll(".choice"));
+    const correct = q.answer;
+    const isCorrect = (i===correct);
+
+    // mark UI
+    choices.forEach((c, idx)=>{
+      if(idx===correct) c.classList.add("correct");
+      if(idx===i && idx!==correct) c.classList.add("wrong");
+    });
+
+    // scoring
+    if(g.type==="practice"){
+      g.playerA.attempted++;
+      if(isCorrect){ g.playerA.correct++; g.playerA.score += 10; popConfetti(); }
+      else { /* no points */ }
+    }else{
+      const player = g.currentTurn==="A" ? g.playerA : g.playerB;
+      if(isCorrect){ player.score += 10; popConfetti(); }
+    }
+
+    updateHud();
+
+    // answer note
+    const correctText = (q.options && q.options[correct]) ? q.options[correct] : "";
+    $("answerNote").textContent = isCorrect ? "✅ 答對！" : `❌ 正確答案：${correctText}`;
+
+    const wait = isCorrect ? 700 : (g.revealMs || 2000);
+    setTimeout(()=> next(), wait);
+  }
+
+  function next(){
+    const g = app.game;
+    if(!g) return;
+
+    // turn switch for PK
+    if(g.type==="pk"){
+      if(g.turnMode==="alt"){
+        g.currentTurn = (g.currentTurn==="A") ? "B" : "A";
+      }else if(g.turnMode==="half"){
+        const mid = Math.ceil(g.questions.length/2);
+        g.currentTurn = (g.index+1 < mid) ? "A" : "B";
+      }
+    }
+
+    g.index++;
+    if(g.index >= g.questions.length){
+      finishGame();
+    }else{
+      renderQuestion();
+    }
+  }
+
+  function finishGame(){
+    const g = app.game;
+    if(!g) return;
+
+    if(g.type==="practice"){
+      const st = ensureStats(g.playerA.id).practice;
+      st.played++;
+      st.total += g.playerA.attempted;
+      st.correct += g.playerA.correct;
+      const pct = g.playerA.attempted ? Math.round((g.playerA.correct/g.playerA.attempted)*100) : 0;
+      st.best = Math.max(st.best, pct);
+
+      app.data.results.logs.unshift({
+        id: uid("log"),
+        type:"practice",
+        time: nowISO(),
+        studentId: g.playerA.id,
+        student: g.playerA.name,
+        total: g.playerA.attempted,
+        correct: g.playerA.correct,
+        scorePct: pct
+      });
+      save();
+      app.game = null;
+      alert(`練習結束！\n${g.playerA.name}\n答對 ${g.playerA.correct}/${g.playerA.attempted}\n正確率 ${pct}%`);
+      show("viewReports");
+      return;
+    }
+
+    // PK
+    const a = ensureStats(g.playerA.id).pk;
+    const b = ensureStats(g.playerB.id).pk;
     a.played++; b.played++;
     a.pointsFor += g.playerA.score; a.pointsAgainst += g.playerB.score;
     b.pointsFor += g.playerB.score; b.pointsAgainst += g.playerA.score;
 
     let result = "tie";
-    if(g.playerA.score > g.playerB.score){ result="A"; a.win++; b.lose++; }
-    else if(g.playerB.score > g.playerA.score){ result="B"; b.win++; a.lose++; }
+    if(g.playerA.score > g.playerB.score){ a.win++; b.lose++; result="A"; }
+    else if(g.playerB.score > g.playerA.score){ b.win++; a.lose++; result="B"; }
     else { a.tie++; b.tie++; }
 
     app.data.results.logs.unshift({
       id: uid("log"),
-      type: "pk",
-      time: ts,
-      a: g.playerA.name,
-      b: g.playerB.name,
-      aScore: g.playerA.score,
-      bScore: g.playerB.score,
+      type:"pk",
+      time: nowISO(),
+      aId: g.playerA.id, aName: g.playerA.name, aScore: g.playerA.score,
+      bId: g.playerB.id, bName: g.playerB.name, bScore: g.playerB.score,
       result
     });
-
     save();
-
-    // Show award modal (do NOT auto-jump to reports)
     app.game = null;
+
     showAwardModal({
-      aName: g.playerA.name, aEmoji: g.playerA.emoji||"🙂", aScore: g.playerA.score,
-      bName: g.playerB.name, bEmoji: g.playerB.emoji||"🙂", bScore: g.playerB.score
+      aName:g.playerA.name, aEmoji:g.playerA.emoji, aScore:g.playerA.score,
+      bName:g.playerB.name, bEmoji:g.playerB.emoji, bScore:g.playerB.score,
+      result
     });
   }
-}
 
-function updateScoreUI(){
-  const g = app.game;
-  if(!g) return;
-
-  $("scoreA").textContent = g.playerA.score;
-  $("statA").textContent = `答對 ${g.playerA.correct} / ${g.playerA.attempted}`;
-
-  // HUD score (mobile-friendly)
-  const hudScore = $("hudScore");
-  if(hudScore){
-    if(g.type==="practice"){
-      hudScore.textContent = String(g.playerA.score);
-    }else{
-      hudScore.textContent = `${g.playerA.score} : ${g.playerB.score}`;
-    }
-  }
-  $("scoreABox").classList.add("flash");
-  setTimeout(()=> $("scoreABox").classList.remove("flash"), 220);
-
-  if(g.type==="pk"){
-    $("scoreB").textContent = g.playerB.score;
-    $("statB").textContent = `答對 ${g.playerB.correct} / ${g.playerB.attempted}`;
-    $("scoreBBox").classList.add("flash");
-    setTimeout(()=> $("scoreBBox").classList.remove("flash"), 220);
-  }
-}
-
-function updateProgress(){
-  const g = app.game;
-  if(!g) return;
-
-  // existing text
-  $("progressBox").textContent = `第 ${g.index+1} 題 / ${g.questions.length} 題`;
-
-  // HUD + badge + bar
-  const hudCount = $("hudCount");
-  if(hudCount) hudCount.textContent = `${g.index+1}/${g.questions.length}`;
-  const badge = $("qBadge");
-  if(badge) badge.textContent = `Q${g.index+1}`;
-
-  const bar = $("progressInner");
-  if(bar){
-    const pct = Math.round(((g.index+1)/Math.max(1,g.questions.length))*100);
-    bar.style.width = `${pct}%`;
-  }
-}
-
-function pickQuestions(pool, count){
-  const arr = pool.slice();
-  shuffle(arr);
-  return arr.slice(0, Math.min(count, arr.length));
-}
-
-function shuffle(arr){
-  for(let i=arr.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [arr[i],arr[j]] = [arr[j],arr[i]];
-  }
-}
-
-function getStudent(id){
-  return app.data.students.find(s=>s.id===id) || {id, name:"（未知）", emoji:"🙂"};
-}
-
-/** ========== Reports ========== */
-function renderReports(){
-  refreshPills();
-
-  const boxS = $("leaderList");
-  boxS.innerHTML = "";
-
-  // 排行榜：可切換 PK / 練習
-  const mode = (app.ui && app.ui.leaderMode) ? app.ui.leaderMode : "pk";
-  const topTitle = $("leaderTopTitle");
-  const listTitle = $("leaderListTitle");
-  if(topTitle) topTitle.textContent = mode==="pk" ? "PK 勝率前三名" : "單人練習答對率前三名";
-  if(listTitle) listTitle.textContent = mode==="pk" ? "完整 PK 排行" : "完整 練習排行";
-
-  const metric = (stu)=>{
-    ensureStudentStats(stu.id);
-    const st = app.data.results.perStudent[stu.id];
-    if(mode==="practice"){
-      const p = st.practice;
-      const acc = p.total ? (p.correct/p.total) : 0;
-      return { score: acc, tie1: p.total, tie2: p.best };
-    }else{
-      const pk = st.pk;
-      const wr = pk.played ? ((pk.win + pk.tie*0.5)/pk.played) : 0;
-      return { score: wr, tie1: pk.played, tie2: pk.win };
-    }
-  };
-
-  const studentsSorted = app.data.students.slice().sort((a,b)=>{
-    const A = metric(a), B = metric(b);
-    if(B.score !== A.score) return B.score - A.score;
-    if(B.tie1 !== A.tie1) return B.tie1 - A.tie1;
-    if(B.tie2 !== A.tie2) return B.tie2 - A.tie2;
-    return (a.name||"").localeCompare(b.name||"", "zh-Hant");
-  });
-    ensureStudentStats(b.id);
-    const pa = app.data.results.perStudent[a.id].pk;
-    const pb = app.data.results.perStudent[b.id].pk;
-    const ra = pa.played ? ((pa.win + pa.tie*0.5)/pa.played) : 0;
-    const rb = pb.played ? ((pb.win + pb.tie*0.5)/pb.played) : 0;
-    if(rb !== ra) return rb - ra;
-    if(pb.played !== pa.played) return pb.played - pa.played;
-    if(pb.win !== pa.win) return pb.win - pa.win;
-    return (a.name||"").localeCompare(b.name||"", "zh-Hant");
-
-  // Top 3 podium
-  const pod = $("podiumTop3");
-  if(pod){
-    pod.innerHTML = "";
-    const top = studentsSorted.slice(0,3);
-    if(top.length===0){
-      pod.innerHTML = `<div class="notice">目前沒有學生資料。先到「老師後台」新增學生吧！</div>`;
-    }else{
-      const medal = ["🥇","🥈","🥉"];
-      const rankText = ["第一名","第二名","第三名"];
-      top.forEach((stu,i)=>{
-        ensureStudentStats(stu.id);
-        const st = app.data.results.perStudent[stu.id];
-        const p = st.practice;
-        const pct = p.total ? Math.round((p.correct/p.total)*100) : 0;
-        const pk = st.pk;
-        const winRate = pk.played ? ((pk.win + pk.tie*0.5)/pk.played) : 0;
-        const winPct = Math.round(winRate*100);
-        const div = document.createElement("div");
-        div.className = "podiumCard " + (i===0?"first":(i===1?"second":"third"));
-        div.innerHTML = `
-          <div class="badge">${medal[i]}</div>
-          <div class="rank">${rankText[i]}</div>
-          <div class="name">${escapeHTML(stu.emoji||"🙂")} ${escapeHTML(stu.name)}</div>
-          <div class="meta">${mode==="pk" ? `PK 勝率 ${winPct}%｜${pk.played} 場（勝 ${pk.win}／敗 ${pk.lose}／和 ${pk.tie}）` : `練習答對率 ${pct}%｜題數 ${p.total}｜最佳 ${p.best}%`}</div>
-        `;
-        pod.appendChild(div);
-      });
-    }
-  }
-
-  studentsSorted.forEach((stu, rankIdx)=>{
-    ensureStudentStats(stu.id);
-    const st = app.data.results.perStudent[stu.id];
-    const p = st.practice;
-    const pk = st.pk;
-    const pct = p.total ? Math.round((p.correct/p.total)*100) : 0;
-    const winRate = pk.played ? ((pk.win + pk.tie*0.5)/pk.played) : 0;
-    const winPct = Math.round(winRate*100);
-
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `
-      <div class="meta">
-        <div class="avatar">${escapeHTML(stu.emoji||"🙂")}</div>
-        <div>
-          <h3>${rankIdx<3?["🥇 ","🥈 ","🥉 "][rankIdx]:""}第 ${rankIdx+1} 名｜${escapeHTML(stu.name)}</h3>
-          <p>練習：${p.played} 次｜總正確率 ${pct}%｜最佳 ${p.best}%</p>
-          <p>PK：${pk.played} 場｜勝 ${pk.win}／敗 ${pk.lose}／和 ${pk.tie}｜勝率 ${winPct}%</p>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="tiny" data-act="exportOne">匯出此生紀錄</button>
-      </div>
-    `;
-    div.querySelector('[data-act="exportOne"]').onclick = ()=> exportOneStudentCSV(stu);
-    boxS.appendChild(div);
-  });
-
-  const boxL = $("reportLogs");
-  boxL.innerHTML = "";
-  if(app.data.results.logs.length===0){
-    const empty = document.createElement("div");
-    empty.className = "notice";
-    empty.textContent = "目前沒有紀錄。先玩一場練習或 PK 吧！";
-    boxL.appendChild(empty);
-  }else{
-    app.data.results.logs.slice(0,30).forEach(log=>{
-      const div = document.createElement("div");
-      div.className = "item";
-      const t = new Date(log.time);
-      const timeStr = isNaN(t.getTime()) ? log.time : t.toLocaleString("zh-TW");
-      if(log.type==="practice"){
-        div.innerHTML = `
-          <div class="meta">
-            <div class="avatar">🧩</div>
-            <div>
-              <h3>練習｜${escapeHTML(log.student)}</h3>
-              <p>${timeStr}｜${escapeHTML(log.category||"全部")}｜答對 ${log.correct}/${log.total}（${log.score}%）</p>
-            </div>
-          </div>
-          <div class="actions"></div>
-        `;
-      }else{
-        div.innerHTML = `
-          <div class="meta">
-            <div class="avatar">⚔️</div>
-            <div>
-              <h3>PK｜${escapeHTML(log.A)} vs ${escapeHTML(log.B)}（${escapeHTML(log.winner)}）</h3>
-              <p>${timeStr}｜${escapeHTML(log.category||"全部")}｜${log.mode==="buzz"?"搶答":"輪流"}｜${log.A} ${log.scoreA} : ${log.scoreB} ${log.B}</p>
-            </div>
-          </div>
-          <div class="actions"></div>
-        `;
-      }
-      boxL.appendChild(div);
-    });
-  }
-}
-
-/** ========== Import / Export ========== */
-function download(filename, text, mime="application/json"){
-  const blob = new Blob([text], {type:mime});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
-}
-
-function exportAll(){
-  const pack = {
-    version: 2,
-    exportedAt: new Date().toISOString(),
-    data: app.data
-  };
-  download(`英文能力評估_全部備份_${dateStamp()}.json`, JSON.stringify(pack, null, 2), "application/json");
-}
-
-function importAll(file){
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    try{
-      const obj = JSON.parse(reader.result);
-      if(obj && obj.data){
-        app.data = obj.data;
-        if(!app.data.results) app.data.results = { perStudent:{}, logs:[] };
-        if(!app.data.settings) app.data.settings = { tts:false, motion:true };
-        if(!Array.isArray(app.data.students)) app.data.students = [];
-        if(!Array.isArray(app.data.questions)) app.data.questions = [];
-        app.data.questions = app.data.questions.map(q => normalizeQuestion(q));
-        app.data.students.forEach(s=> ensureStudentStats(s.id));
-        save();
-        alert("匯入成功！");
-        show("viewHome");
-      }else{
-        alert("這個檔案格式不正確（找不到 data）。");
-      }
-    }catch(e){
-      alert("讀取失敗：不是有效的 JSON。");
-    }
-  };
-  reader.readAsText(file);
-}
-
-function exportQuestionsJSON(){
-  const pack = {
-    version: 2,
-    exportedAt: new Date().toISOString(),
-    questions: app.data.questions
-  };
-  download(`英文能力評估_題庫_${dateStamp()}.json`, JSON.stringify(pack, null, 2), "application/json");
-}
-
-function exportQuestionsCSV(){
-  const rows = [];
-  rows.push(["prompt","A","B","C","D","answer","category","difficulty","explain","optionCount"].join(","));
-  app.data.questions.forEach(q=>{
-    const opts = normalizeOptions(q.options);
-    const ans = ["A","B","C","D"][q.answer||0];
-    rows.push([
-      csvCell(q.prompt),
-      csvCell(opts[0]), csvCell(opts[1]), csvCell(opts[2]), csvCell(opts[3]),
-      csvCell(ans),
-      csvCell(q.category||""),
-      csvCell(String(q.difficulty||1)),
-      csvCell(q.explain||""),
-      csvCell(String(q.optionCount||4))
-    ].join(","));
-  });
-  download(`英文能力評估_題庫_${dateStamp()}.csv`, rows.join("\n"), "text/csv;charset=utf-8");
-}
-
-function questionKey(q){
-  const opts = normalizeOptions(q.options).slice(0, q.optionCount).join("|");
-  return `${(q.prompt||"").trim()}||${q.optionCount}||${q.answer}||${opts}`;
-}
-
-function appendQuestions(newQuestions){
-  const existing = new Set(app.data.questions.map(q=>questionKey(q)));
-  let added = 0, skipped = 0;
-  newQuestions.forEach(q=>{
-    const nq = normalizeQuestion(q);
-    nq.id = uid("q"); // avoid id collisions
-    const key = questionKey(nq);
-    if(existing.has(key)){ skipped++; return; }
-    existing.add(key);
-    app.data.questions.push(nq); // append to the end
-    added++;
-  });
-  return {added, skipped};
-}
-
-function importQuestionsFile(file, mode="replace"){
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    const name = (file.name||"").toLowerCase();
-
-    const applyReplace = (qs)=>{
-      const normalized = qs.map(q=> normalizeQuestion(q))
-        .filter(q=>q.prompt && q.options.slice(0,q.optionCount).filter(Boolean).length>=2);
-      app.data.questions = normalized;
-      save();
-      renderQuestions();
-      renderPracticeSetup();
-      renderPKSetup();
-      alert(`題庫匯入成功！（覆蓋）目前共有 ${app.data.questions.length} 題。`);
-    };
-
-    const applyAppend = (qs)=>{
-      const normalized = qs.map(q=> normalizeQuestion(q))
-        .filter(q=>q.prompt && q.options.slice(0,q.optionCount).filter(Boolean).length>=2);
-      const {added, skipped} = appendQuestions(normalized);
-      save();
-      renderQuestions();
-      renderPracticeSetup();
-      renderPKSetup();
-      alert(`追加匯入完成！新增 ${added} 題${skipped?`（略過重複 ${skipped} 題）`:``}。目前共有 ${app.data.questions.length} 題。`);
-    };
-
-    try{
-      if(name.endsWith(".json")){
-        const obj = JSON.parse(reader.result);
-        const qs = obj.questions || obj;
-        if(!Array.isArray(qs)) throw new Error("not array");
-        (mode==="append") ? applyAppend(qs) : applyReplace(qs);
-      }else if(name.endsWith(".csv")){
-        const text = reader.result;
-        const qs = parseCSVQuestions(text);
-        (mode==="append") ? applyAppend(qs) : applyReplace(qs);
-      }else{
-        alert("只支援 .json 或 .csv");
-      }
-    }catch(e){
-      console.warn(e);
-      alert(`${mode==="append"?"追加匯入":"題庫匯入"}失敗：請確認檔案格式。`);
-    }
-  };
-  reader.readAsText(file);
-}
-
-
-function downloadCSVTemplate(){
-  const sample = [
-    "prompt,A,B,C,D,answer,category,difficulty,explain,optionCount",
-    "What does “Please” mean?,請,謝謝,,,A,Basics,1,Please=請,2",
-    "You want to say goodbye. Which one?,Hello,Bye,Thanks,Sorry,B,Greetings,1,Bye=再見,4"
-  ].join("\n");
-  download(`英文能力評估_CSV模板_${dateStamp()}.csv`, sample, "text/csv;charset=utf-8");
-}
-
-function exportResultsCSV(){
-  const rows = [];
-  rows.push(["student","practice_played","practice_total","practice_correct","practice_best_pct","pk_played","pk_win","pk_lose","pk_tie","pk_points_for","pk_points_against"].join(","));
-  app.data.students.forEach(stu=>{
-    ensureStudentStats(stu.id);
+  // ===== Reports =====
+  function metric(stu, mode){
+    ensureStats(stu.id);
     const r = app.data.results.perStudent[stu.id];
-    rows.push([
-      csvCell(stu.name),
-      r.practice.played,
-      r.practice.total,
-      r.practice.correct,
-      r.practice.best,
-      r.pk.played,
-      r.pk.win,
-      r.pk.lose,
-      r.pk.tie,
-      r.pk.pointsFor,
-      r.pk.pointsAgainst
-    ].join(","));
-  });
-  download(`英文能力評估_成績_${dateStamp()}.csv`, rows.join("\n"), "text/csv;charset=utf-8");
-}
-
-function exportOneStudentCSV(stu){
-  ensureStudentStats(stu.id);
-  const r = app.data.results.perStudent[stu.id];
-  const rows = [];
-  rows.push(["student","practice_played","practice_total","practice_correct","practice_best_pct","pk_played","pk_win","pk_lose","pk_tie","pk_points_for","pk_points_against"].join(","));
-  rows.push([
-    csvCell(stu.name),
-    r.practice.played, r.practice.total, r.practice.correct, r.practice.best,
-    r.pk.played, r.pk.win, r.pk.lose, r.pk.tie, r.pk.pointsFor, r.pk.pointsAgainst
-  ].join(","));
-  download(`英文能力評估_${stu.name}_紀錄_${dateStamp()}.csv`, rows.join("\n"), "text/csv;charset=utf-8");
-}
-
-/** ========== CSV parser ========== */
-function parseCSVQuestions(text){
-  const lines = text.replace(/\r/g,"").split("\n").filter(l=>l.trim().length>0);
-  if(lines.length<2) return [];
-  const header = splitCSVLine(lines[0]).map(h=>h.trim());
-  const idx = (name)=> header.indexOf(name);
-
-  const iPrompt = idx("prompt");
-  const iA = idx("A"), iB = idx("B"), iC = idx("C"), iD = idx("D");
-  const iAns = idx("answer");
-  const iCat = idx("category");
-  const iDiff = idx("difficulty");
-  const iExp = idx("explain");
-  const iOC = idx("optionCount");
-
-  if(iPrompt<0 || iA<0 || iB<0 || iAns<0) throw new Error("missing columns");
-
-  const qs = [];
-  for(let k=1;k<lines.length;k++){
-    const cols = splitCSVLine(lines[k]);
-    const prompt = (cols[iPrompt]||"").trim();
-    const A = (cols[iA]||"").trim();
-    const B = (cols[iB]||"").trim();
-    const C = (iC>=0 ? (cols[iC]||"").trim() : "");
-    const D = (iD>=0 ? (cols[iD]||"").trim() : "");
-    const ansRaw = (cols[iAns]||"A").trim().toUpperCase();
-    const category = (iCat>=0 ? (cols[iCat]||"").trim() : "");
-    const difficulty = clampInt(iDiff>=0 ? cols[iDiff] : 1, 1, 3, 1);
-    const explain = (iExp>=0 ? (cols[iExp]||"").trim() : "");
-    let optionCount = clampInt(iOC>=0 ? cols[iOC] : "", 2, 4, NaN);
-
-    const options = normalizeOptions([A,B,C,D]);
-    const filled = options.filter(Boolean).length;
-    if(Number.isNaN(optionCount)){
-      optionCount = Math.min(4, Math.max(2, filled || 4));
+    if(mode==="practice"){
+      const p = r.practice;
+      const acc = p.total ? (p.correct/p.total) : 0;
+      return { score: acc, t1: p.total, t2: p.best };
     }
-    // blank beyond optionCount
-    for(let i=optionCount;i<4;i++) options[i] = "";
-
-    const allowed = ["A","B","C","D"].slice(0, optionCount);
-    const answer = Math.max(0, Math.min(optionCount-1, allowed.indexOf(ansRaw)));
-
-    if(prompt && options.slice(0,optionCount).filter(Boolean).length>=2){
-      qs.push({ id: uid("q"), prompt, options, optionCount, answer, category, difficulty, explain });
-    }
-  }
-  return qs;
-}
-
-function splitCSVLine(line){
-  const out = [];
-  let cur = "", inQ = false;
-  for(let i=0;i<line.length;i++){
-    const ch = line[i];
-    if(ch === '"'){
-      if(inQ && line[i+1]==='"'){ cur+='"'; i++; }
-      else inQ = !inQ;
-    } else if(ch === "," && !inQ){
-      out.push(cur); cur="";
-    } else {
-      cur += ch;
-    }
-  }
-  out.push(cur);
-  return out;
-}
-
-function csvCell(v){
-  const s = (v??"").toString();
-  if(/[,"\n]/.test(s)){
-    return `"${s.replace(/"/g,'""')}"`;
-  }
-  return s;
-}
-
-/** ========== Utils ========== */
-function escapeHTML(s){
-  return (s??"").toString()
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-function clampInt(v, min, max, def){
-  const n = parseInt(v,10);
-  if(Number.isNaN(n)) return def;
-  return Math.max(min, Math.min(max, n));
-}
-function dateStamp(){
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const da = String(d.getDate()).padStart(2,"0");
-  return `${y}${m}${da}`;
-}
-
-/** ========== Events ========== */
-$("btnHome").onclick = ()=> show("viewHome");
-$("goTeacher").onclick = ()=> show("viewTeacher");
-$("goPractice").onclick = ()=> show("viewPracticeSetup");
-$("goPK").onclick = ()=> show("viewPKSetup");
-$("goReports").onclick = ()=> show("viewReports");
-
-// toggles
-function toggleTTS(){
-  app.data.settings.tts = !app.data.settings.tts;
-  save(); refreshPills();
-}
-$("toggleTTS").onclick = toggleTTS;
-$("toggleTTS2").onclick = toggleTTS;
-$("toggleTTS3").onclick = toggleTTS;
-
-$("toggleMotion").onclick = ()=>{
-  app.data.settings.motion = !app.data.settings.motion;
-  save(); refreshPills();
-};
-
-// backup
-$("exportAll").onclick = exportAll;
-$("importAllFile").addEventListener("change", (e)=>{
-  const f = e.target.files?.[0];
-  if(f) importAll(f);
-  e.target.value = "";
-});
-
-// students
-$("addStudent").onclick = ()=>{
-  const name = ($("stuName").value||"").trim();
-  const emoji = ($("stuEmoji").value||"🙂").trim() || "🙂";
-  if(!name){ alert("請輸入學生名字。"); return; }
-  const st = { id: uid("stu"), name, emoji };
-  app.data.students.push(st);
-  ensureStudentStats(st.id);
-  $("stuName").value = ""; $("stuEmoji").value = "";
-  save(); renderStudents(); renderPracticeSetup(); renderPKSetup(); renderReports();
-};
-$("wipeStudents").onclick = ()=>{
-  if(!confirm("確定清空所有學生？（也會清掉他們的成績）")) return;
-  app.data.students = [];
-  app.data.results.perStudent = {};
-  save(); renderStudents(); renderPracticeSetup(); renderPKSetup(); renderReports();
-};
-
-// question option count UI
-$("qOptCount").addEventListener("change", syncOptUIFromCount);
-$("cancelEdit").onclick = cancelEdit;
-
-// questions
-$("addQuestion").onclick = ()=>{
-  const prompt = ($("qPrompt").value||"").trim();
-  const optionCount = clampInt($("qOptCount").value, 2, 4, 4);
-  const A = ($("optA").value||"").trim();
-  const B = ($("optB").value||"").trim();
-  const C = optionCount>=3 ? ($("optC").value||"").trim() : "";
-  const D = optionCount>=4 ? ($("optD").value||"").trim() : "";
-  const answer = clampInt($("qAnswer").value, 0, optionCount-1, 0);
-  const category = ($("qCat").value||"").trim();
-  const difficulty = clampInt($("qDiff").value, 1, 3, 1);
-  const explain = ($("qExplain").value||"").trim();
-
-  if(!prompt || [A,B,C,D].slice(0, optionCount).filter(Boolean).length<2){
-    alert("請至少輸入題幹，並至少填 2 個選項（A、B 必填）。");
-    return;
+    const pk = r.pk;
+    const wr = pk.played ? ((pk.win + pk.tie*0.5)/pk.played) : 0;
+    return { score: wr, t1: pk.played, t2: pk.win };
   }
 
-  const q = normalizeQuestion({
-    id: editingQId || uid("q"),
-    prompt,
-    options: [A,B,C,D],
-    optionCount,
-    answer,
-    category,
-    difficulty,
-    explain
-  });
+  function renderReports(){
+    const mode = app.ui.leaderMode || "pk";
+    $("leaderTopTitle").textContent = mode==="pk" ? "PK 勝率前三名" : "單人練習答對率前三名";
+    $("leaderListTitle").textContent = mode==="pk" ? "完整 PK 排行" : "完整 練習排行";
 
-  if(editingQId){
-    const idx = app.data.questions.findIndex(x=>x.id===editingQId);
-    if(idx>=0) app.data.questions[idx] = q;
-    else app.data.questions.unshift(q);
-    setEditMode(false);
-  }else{
-    app.data.questions.unshift(q);
-  }
+    // highlight tabs
+    $("tabPK").style.opacity = (mode==="pk") ? "1" : ".7";
+    $("tabPractice").style.opacity = (mode==="practice") ? "1" : ".7";
 
-  clearQuestionForm();
-  save(); renderQuestions();
-};
+    const sorted = app.data.students.slice().sort((a,b)=>{
+      const A=metric(a,mode), B=metric(b,mode);
+      if(B.score!==A.score) return B.score-A.score;
+      if(B.t1!==A.t1) return B.t1-A.t1;
+      if(B.t2!==A.t2) return B.t2-A.t2;
+      return (a.name||"").localeCompare(b.name||"", "zh-Hant");
+    });
 
-
-$("exportQuestions").onclick = exportQuestionsJSON;
-$("exportQuestionsCSV").onclick = exportQuestionsCSV;
-$("importQuestionsFile").addEventListener("change", (e)=>{
-  const f = e.target.files?.[0];
-  if(f) importQuestionsFile(f, "replace");
-  e.target.value = "";
-});
-
-$("importQuestionsAppendFile").addEventListener("change", (e)=>{
-  const f = e.target.files?.[0];
-  if(f) importQuestionsFile(f, "append");
-  e.target.value = "";
-});
-$("wipeQuestions").onclick = ()=>{
-  if(!confirm("確定清空題庫？")) return;
-  app.data.questions = [];
-  save(); renderQuestions();
-};
-$("downloadCSVTemplate").onclick = downloadCSVTemplate;
-
-// practice setup
-$("startPractice").onclick = startPractice;
-$("backHome1").onclick = ()=> show("viewHome");
-
-// pk setup
-$("startPK").onclick = startPK;
-$("backHome2").onclick = ()=> show("viewHome");
-
-// game controls
-$("speakPrompt").onclick = ()=>{
-  const g = app.game;
-  if(!g) return;
-  const q = g.questions[g.index];
-  speak(`題目：${q.prompt}`);
-};
-$("skipQ").onclick = ()=>{
-  const g = app.game;
-  if(!g) return;
-  speak("跳過");
-  nextQuestion();
-};
-$("endGame").onclick = ()=>{
-  if(!confirm("確定結束本局？")) return;
-  app.game = null;
-  show("viewHome");
-};
-
-// buzz buttons
-$("buzzA").onclick = ()=>{
-  const g = app.game;
-  if(!g || g.type!=="pk" || g.mode!=="buzz") return;
-  if(g.active) return;
-  g.active = "A";
-  enableChoices(true);
-  toast(`${g.playerA.name} 搶到！請作答`, 900);
-  speak(`${g.playerA.name} 搶到`);
-};
-$("buzzB").onclick = ()=>{
-  const g = app.game;
-  if(!g || g.type!=="pk" || g.mode!=="buzz") return;
-  if(g.active) return;
-  g.active = "B";
-  enableChoices(true);
-  toast(`${g.playerB.name} 搶到！請作答`, 900);
-  speak(`${g.playerB.name} 搶到`);
-};
-
-
-function showAwardModal(data){
-  const ov = $("awardOverlay");
-  if(!ov) return;
-  const winnerEl = $("awardWinner");
-  const sumEl = $("awardSummary");
-  const pod = $("awardPodium");
-
-  const aWins = data.aScore > data.bScore;
-  const tie = data.aScore === data.bScore;
-  const winnerText = tie ? "平手 🤝" : (aWins ? `冠軍：${data.aEmoji} ${data.aName} 🏆` : `冠軍：${data.bEmoji} ${data.bName} 🏆`);
-  winnerEl.textContent = winnerText;
-
-  sumEl.innerHTML = "";
-  const chipA = document.createElement("div");
-  chipA.className = "awardChip";
-  chipA.textContent = `${data.aEmoji} ${data.aName}：${data.aScore} 分`;
-  const chipB = document.createElement("div");
-  chipB.className = "awardChip";
-  chipB.textContent = `${data.bEmoji} ${data.bName}：${data.bScore} 分`;
-  sumEl.appendChild(chipA);
-  sumEl.appendChild(chipB);
-
-  // small podium (A/B only)
-  if(pod){
-    pod.innerHTML = "";
-    const entries = [
-      { name: `${data.aEmoji} ${data.aName}`, score: data.aScore },
-      { name: `${data.bEmoji} ${data.bName}`, score: data.bScore },
-    ].sort((x,y)=> y.score - x.score);
-
-    const medal = ["🥇","🥈"];
-    entries.forEach((e,i)=>{
+    // top3
+    const top = sorted.slice(0,3);
+    const podium = $("podiumTop3");
+    podium.innerHTML = "";
+    const medals = ["🥇 第一名","🥈 第二名","🥉 第三名"];
+    top.forEach((stu, i)=>{
       const div = document.createElement("div");
-      div.className = "podiumCard " + (i===0?"first":"second");
-      div.innerHTML = `
-        <div class="badge">${medal[i]}</div>
-        <div class="rank">${i===0?"第一名":"第二名"}</div>
-        <div class="name">${escapeHTML(e.name)}</div>
-        <div class="meta">分數 ${e.score}</div>
-      `;
+      div.className="pod";
+      const r = app.data.results.perStudent[stu.id];
+      if(mode==="pk"){
+        const pk=r.pk;
+        const wr = pk.played ? Math.round(((pk.win+pk.tie*0.5)/pk.played)*100) : 0;
+        div.innerHTML = `<div class="rank">${medals[i]}</div>
+          <div class="name">${escapeHTML(stu.emoji||"🙂")} ${escapeHTML(stu.name)}</div>
+          <div class="stat">勝率 ${wr}%</div>
+          <div class="meta">${pk.played} 場（勝 ${pk.win}／敗 ${pk.lose}／和 ${pk.tie}）</div>`;
+      }else{
+        const p=r.practice;
+        const acc = p.total ? Math.round((p.correct/p.total)*100) : 0;
+        div.innerHTML = `<div class="rank">${medals[i]}</div>
+          <div class="name">${escapeHTML(stu.emoji||"🙂")} ${escapeHTML(stu.name)}</div>
+          <div class="stat">答對率 ${acc}%</div>
+          <div class="meta">題數 ${p.total}（答對 ${p.correct}）｜最佳 ${p.best}%</div>`;
+      }
+      podium.appendChild(div);
+    });
+    if(!top.length){
+      podium.innerHTML = `<div class="note">目前還沒有紀錄～先去玩幾題吧！</div>`;
+    }
+
+    // list
+    const list = $("leaderList");
+    list.innerHTML = "";
+    sorted.forEach((stu, idx)=>{
+      const r = app.data.results.perStudent[stu.id];
+      const it = document.createElement("div");
+      it.className="item";
+      if(mode==="pk"){
+        const pk=r.pk;
+        const wr = pk.played ? Math.round(((pk.win+pk.tie*0.5)/pk.played)*100) : 0;
+        it.innerHTML = `
+          <div class="left">
+            <div class="emoji">${escapeHTML(stu.emoji||"🙂")}</div>
+            <div>
+              <div style="font-weight:1000">${idx+1}. ${escapeHTML(stu.name)}</div>
+              <div class="meta">勝率 ${wr}%｜${pk.played} 場（勝 ${pk.win}／敗 ${pk.lose}／和 ${pk.tie}）</div>
+            </div>
+          </div>
+          <div style="font-weight:1000">${wr}%</div>
+        `;
+      }else{
+        const p=r.practice;
+        const acc = p.total ? Math.round((p.correct/p.total)*100) : 0;
+        it.innerHTML = `
+          <div class="left">
+            <div class="emoji">${escapeHTML(stu.emoji||"🙂")}</div>
+            <div>
+              <div style="font-weight:1000">${idx+1}. ${escapeHTML(stu.name)}</div>
+              <div class="meta">答對率 ${acc}%｜題數 ${p.total}（答對 ${p.correct}）｜最佳 ${p.best}%</div>
+            </div>
+          </div>
+          <div style="font-weight:1000">${acc}%</div>
+        `;
+      }
+      list.appendChild(it);
+    });
+  }
+
+  // ===== Award modal =====
+  function showAwardModal(d){
+    const ov = $("awardOverlay");
+    $("awardSummary").innerHTML = `
+      <span class="pill" style="cursor:default">${escapeHTML(d.aEmoji)} ${escapeHTML(d.aName)}：${d.aScore}</span>
+      <span class="pill" style="cursor:default">${escapeHTML(d.bEmoji)} ${escapeHTML(d.bName)}：${d.bScore}</span>
+    `;
+    const winner = $("awardWinner");
+    if(d.aScore===d.bScore) winner.textContent = "平手 🤝";
+    else winner.textContent = (d.aScore>d.bScore) ? `冠軍：${d.aEmoji} ${d.aName} 🏆` : `冠軍：${d.bEmoji} ${d.bName} 🏆`;
+
+    const pod = $("awardPodium");
+    const entries = [
+      { name:`${d.aEmoji} ${d.aName}`, score:d.aScore },
+      { name:`${d.bEmoji} ${d.bName}`, score:d.bScore }
+    ].sort((x,y)=>y.score-x.score);
+    pod.innerHTML="";
+    const medals=["🥇 第一名","🥈 第二名"];
+    entries.forEach((e,i)=>{
+      const div=document.createElement("div");
+      div.className="pod";
+      div.innerHTML=`<div class="rank">${medals[i]}</div><div class="name">${escapeHTML(e.name)}</div><div class="stat">${e.score} 分</div>`;
       pod.appendChild(div);
     });
+
+    ov.classList.remove("hidden");
+  }
+  function hideAwardModal(){ $("awardOverlay").classList.add("hidden"); }
+
+  // ===== TTS =====
+  function speak(text){
+    try{
+      if(!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.95;
+      u.pitch = 1.05;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function speakQuestion(){
+    const g = app.game;
+    if(!g) return;
+    const q = g.questions[g.index];
+    const parts = [q.prompt].concat((q.options||[]).map((o,i)=>`${i+1}. ${o}`));
+    speak(parts.join("。"));
   }
 
-  ov.classList.remove("hidden");
-}
+  // ===== Confetti =====
+  function popConfetti(){
+    const layer = $("confetti");
+    const emojis = ["✨","🌟","🎉","💖","⭐","🎈"];
+    const w = window.innerWidth, h = window.innerHeight;
+    for(let i=0;i<12;i++){
+      const el = document.createElement("div");
+      el.className="conf";
+      el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+      const x = Math.random()*w;
+      const y = Math.random()*(h*0.35) + 80;
+      const x2 = x + (Math.random()*140-70);
+      el.style.left = "0px";
+      el.style.top = "0px";
+      el.style.setProperty("--x", `${x}px`);
+      el.style.setProperty("--y", `${y}px`);
+      el.style.setProperty("--x2", `${x2}px`);
+      layer.appendChild(el);
+      setTimeout(()=>el.remove(), 920);
+    }
+  }
 
-function hideAwardModal(){
-  const ov = $("awardOverlay");
-  if(!ov) return;
-  ov.classList.add("hidden");
-}
+  // ===== Bind UI =====
+  function bindUI(){
+    const go = (v)=>()=>show(v);
 
+    // top pills
+    $("btnHomeTop").onclick = go("viewHome");
+    $("btnReportsTop").onclick = go("viewReports");
+    $("btnBankTop").onclick = go("viewBank");
+    $("btnStudentsTop").onclick = go("viewStudents");
 
-// reports
-$("exportResultsCSV").onclick = exportResultsCSV;
-$("wipeResults").onclick = ()=>{
-  if(!confirm("確定清空所有成績與紀錄？")) return;
-  app.data.results = { perStudent:{}, logs:[] };
-  app.data.students.forEach(s=> ensureStudentStats(s.id));
-  save(); renderReports();
-};
-$("backHome3").onclick = ()=> show("viewHome");
+    // footer nav
+    $("navHome").onclick = go("viewHome");
+    $("navPractice").onclick = go("viewPractice");
+    $("navPK").onclick = go("viewPK");
+    $("navReports").onclick = go("viewReports");
 
+    // home
+    $("goPractice").onclick = go("viewPractice");
+    $("goPK").onclick = go("viewPK");
+    $("goReports").onclick = go("viewReports");
 
-// leaderboard tabs
-if(!app.ui) app.ui = { leaderMode: "pk" };
-if($("tabPK")) $("tabPK").onclick = ()=>{
-  app.ui.leaderMode = "pk";
-  $("tabPK").classList.add("active");
-  $("tabPractice").classList.remove("active");
-  renderReports();
-};
-if($("tabPractice")) $("tabPractice").onclick = ()=>{
-  app.ui.leaderMode = "practice";
-  $("tabPractice").classList.add("active");
-  $("tabPK").classList.remove("active");
-  renderReports();
-};
+    // back
+    ["backHome1","backHome2","backHome3","backHome4","backHome5"].forEach(id=> $(id).onclick = go("viewHome"));
 
-// award modal buttons
-if($("awardClose")) $("awardClose").onclick = hideAwardModal;
-if($("awardHome")) $("awardHome").onclick = ()=>{ hideAwardModal(); show("viewHome"); };
-if($("awardToReports")) $("awardToReports").onclick = ()=>{ hideAwardModal(); show("viewReports"); renderReports(); };
-if($("awardRematch")) $("awardRematch").onclick = ()=>{ hideAwardModal(); show("viewPK"); };
+    // settings
+    $("ttsToggle").onchange = ()=>{
+      app.data.settings.tts = ($("ttsToggle").value==="on");
+      save();
+    };
+    $("revealMs").onchange = ()=>{
+      app.data.settings.revealMs = Number($("revealMs").value)||2000;
+      save();
+    };
 
-// close on backdrop click
-if($("awardOverlay")){
-  $("awardOverlay").addEventListener("click", (e)=>{
-    if(e.target && e.target.id==="awardOverlay") hideAwardModal();
-  });
-}
+    // reset
+    $("btnReset").onclick = ()=>{
+      if(confirm("確定要重置所有資料嗎？（題庫、學生名單、排行榜都會清空）")){
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      }
+    };
 
-// PWA service worker
-if("serviceWorker" in navigator){
-  window.addEventListener("load", ()=>{
-    navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  });
-}
+    // start
+    $("startPractice").onclick = startPractice;
+    $("startPK").onclick = startPK;
 
+    // game controls
+    $("quitGame").onclick = ()=>{
+      if(confirm("要結束這場遊戲嗎？")){
+        app.game = null;
+        show("viewHome");
+      }
+    };
+    $("ttsRead").onclick = speakQuestion;
 
-// init
-load();
-refreshPills();
-show("viewHome");
-renderPracticeSetup();
-renderPKSetup();
-renderReports();
+    // reports tabs
+    $("tabPK").onclick = ()=>{ app.ui.leaderMode="pk"; renderReports(); };
+    $("tabPractice").onclick = ()=>{ app.ui.leaderMode="practice"; renderReports(); };
 
-// init option UI
-buildAnswerOptions(4);
-syncOptUIFromCount();
+    // bank
+    $("exportBank").onclick = exportBank;
+    $("importBankFile").addEventListener("change", (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(f) importBankReplace(f);
+      e.target.value = "";
+    });
+    $("appendBankFile").addEventListener("change", (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(f) importBankAppend(f);
+      e.target.value = "";
+    });
+    $("quickToJson").onclick = quickPasteToJson;
 
+    // students
+    $("addStudent").onclick = addStudent;
+    $("saveStudents").onclick = saveStudents;
+    $("exportStudents").onclick = exportStudents;
+    $("importStudentsFile").addEventListener("change", (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(f) importStudentsReplace(f);
+      e.target.value = "";
+    });
+
+    // award modal
+    $("awardHome").onclick = ()=>{ hideAwardModal(); show("viewHome"); };
+    $("awardToReports").onclick = ()=>{ hideAwardModal(); show("viewReports"); };
+    $("awardRematch").onclick = ()=>{ hideAwardModal(); show("viewPK"); };
+    $("awardOverlay").addEventListener("click", (e)=>{ if(e.target && e.target.id==="awardOverlay") hideAwardModal(); });
+  }
+
+  load();
+})();
 </script>
-
-  <!-- PK Award Modal -->
-  <div id="awardOverlay" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="awardH">
-    <div class="modalCard">
-      <div class="awardTitle">
-        <h2 id="awardH">🎉 PK 頒獎時間</h2>
-        <button class="tiny" id="awardClose" type="button">關閉</button>
-      </div>
-      <div class="awardBig">
-        <div class="who" id="awardWinner">冠軍：—</div>
-        <div class="sum" id="awardSummary"></div>
-      </div>
-      <div class="hr"></div>
-      <div id="awardPodium" class="podium"></div>
-      <div class="awardBtns">
-        <button class="primary" id="awardRematch" type="button">🔁 再來一局</button>
-        <button id="awardToReports" type="button">📊 看排行榜</button>
-        <button id="awardHome" type="button">🏠 回首頁</button>
-      </div>
-    </div>
-  </div>
-
 </body>
 </html>
